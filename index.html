@@ -1,0 +1,3423 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>FB Informática · Field Ops</title>
+
+<!-- PWA -->
+<meta name="application-name" content="FB Field Ops">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FB Ops">
+<meta name="theme-color" content="#0a0c10">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="description" content="FB Informática · Controle de Visitas Técnicas">
+
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111520;
+    --card: #161b28;
+    --border: #1e2840;
+    --accent: #00d4ff;
+    --accent2: #ff6b00;
+    --green: #00e676;
+    --red: #ff3d3d;
+    --yellow: #ffd600;
+    --text: #e8eaf2;
+    --muted: #5a6280;
+    --label: #8899bb;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* GRID BG */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,.03) 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events: none; z-index: 0;
+  }
+
+  /* HEADER */
+  header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,12,16,.95);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px; height: 60px;
+  }
+  .logo {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700; font-size: 20px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+  .logo span { color: var(--accent); }
+  .header-right { display: flex; align-items: center; gap: 16px; }
+  .badge-online {
+    display: flex; align-items: center; gap: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; color: var(--green);
+  }
+  .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--green);
+    animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.3)} }
+  #clock { font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: var(--label); }
+
+  /* NAV TABS */
+  nav {
+    display: flex; gap: 2px;
+    padding: 12px 24px 0;
+    border-bottom: 1px solid var(--border);
+    position: relative; z-index: 1;
+  }
+  .tab {
+    font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 13px;
+    letter-spacing: .08em; text-transform: uppercase;
+    padding: 10px 20px; border-radius: 6px 6px 0 0;
+    border: none; background: transparent; color: var(--muted);
+    cursor: pointer; transition: all .2s; border-bottom: 2px solid transparent;
+  }
+  .tab:hover { color: var(--text); background: rgba(255,255,255,.03); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); background: rgba(0,212,255,.06); }
+
+  /* MAIN */
+  main { position: relative; z-index: 1; padding: 24px; max-width: 1280px; margin: 0 auto; }
+  .view { display: none; animation: fadeIn .3s ease; }
+  .view.active { display: block; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+  /* CARDS */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px;
+    position: relative; overflow: hidden;
+  }
+  .card::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(0,212,255,.04) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .card-title {
+    font-family: 'Rajdhani', sans-serif; font-weight: 700;
+    font-size: 14px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--label); margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-title::before { content: '//'; color: var(--accent); font-family: 'IBM Plex Mono', monospace; font-size: 12px; }
+
+  /* GRID LAYOUTS */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
+  @media(max-width:768px) {
+    .grid-2,.grid-3,.grid-4 { grid-template-columns: 1fr; }
+  }
+
+  /* FORM */
+  .form-group { margin-bottom: 14px; }
+  label { display: block; font-size: 11px; font-weight: 600; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--label); margin-bottom: 6px; }
+  input, select, textarea {
+    width: 100%; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 6px;
+    color: var(--text); font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px; padding: 10px 12px;
+    transition: border-color .2s, box-shadow .2s;
+    outline: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,212,255,.1);
+  }
+  select option { background: var(--card); }
+  textarea { resize: vertical; min-height: 80px; }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 20px; border-radius: 6px; border: none;
+    font-family: 'Rajdhani', sans-serif; font-weight: 700;
+    font-size: 13px; letter-spacing: .08em; text-transform: uppercase;
+    cursor: pointer; transition: all .2s;
+  }
+  .btn-primary { background: var(--accent); color: #000; }
+  .btn-primary:hover { box-shadow: 0 0 20px rgba(0,212,255,.4); transform: translateY(-1px); }
+  .btn-success { background: var(--green); color: #000; }
+  .btn-success:hover { box-shadow: 0 0 20px rgba(0,230,118,.4); }
+  .btn-danger { background: var(--red); color: #fff; }
+  .btn-danger:hover { box-shadow: 0 0 20px rgba(255,61,61,.4); }
+  .btn-warn { background: var(--accent2); color: #fff; }
+  .btn-warn:hover { box-shadow: 0 0 20px rgba(255,107,0,.4); }
+  .btn-ghost { background: transparent; color: var(--label); border: 1px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+  .btn:disabled { opacity: .4; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+
+  /* STAT CARDS */
+  .stat { text-align: center; }
+  .stat-val {
+    font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 40px;
+    line-height: 1; color: var(--accent);
+  }
+  .stat-label { font-size: 12px; color: var(--label); margin-top: 4px; text-transform: uppercase; letter-spacing: .06em; }
+
+  /* STATUS BADGES */
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .05em;
+  }
+  .badge-green { background: rgba(0,230,118,.15); color: var(--green); border: 1px solid rgba(0,230,118,.3); }
+  .badge-yellow { background: rgba(255,214,0,.15); color: var(--yellow); border: 1px solid rgba(255,214,0,.3); }
+  .badge-red { background: rgba(255,61,61,.15); color: var(--red); border: 1px solid rgba(255,61,61,.3); }
+  .badge-blue { background: rgba(0,212,255,.15); color: var(--accent); border: 1px solid rgba(0,212,255,.3); }
+
+  /* TABLE */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left; padding: 10px 14px;
+    font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--muted); border-bottom: 1px solid var(--border);
+  }
+  td { padding: 12px 14px; font-size: 13px; border-bottom: 1px solid rgba(30,40,64,.6); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(0,212,255,.03); }
+
+  /* CHECKIN PANEL */
+  #checkin-status {
+    border: 1px solid var(--border); border-radius: 8px; padding: 16px;
+    background: var(--surface); margin-bottom: 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  #status-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
+  #status-dot.in { background: var(--green); box-shadow: 0 0 10px var(--green); animation: pulse 1.5s infinite; }
+  #status-text { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--label); }
+
+  /* MAP PLACEHOLDER */
+  #map-box {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    height: 180px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 8px;
+    color: var(--muted); font-size: 13px; margin-bottom: 16px;
+    position: relative; overflow: hidden;
+  }
+  #map-box::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(0,212,255,.06) 0%, transparent 70%);
+  }
+  #gps-coords { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--accent); }
+
+  /* TIMELINE */
+  .timeline { padding-left: 16px; border-left: 2px solid var(--border); }
+  .tl-item { padding: 0 0 20px 20px; position: relative; }
+  .tl-item::before {
+    content: ''; position: absolute; left: -27px; top: 4px;
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--accent); border: 2px solid var(--bg);
+    box-shadow: 0 0 6px var(--accent);
+  }
+  .tl-item.checkout::before { background: var(--accent2); box-shadow: 0 0 6px var(--accent2); }
+  .tl-time { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); }
+  .tl-tech { font-weight: 600; font-size: 13px; }
+  .tl-desc { font-size: 12px; color: var(--label); margin-top: 2px; }
+
+  /* RAT MODAL */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,.8); backdrop-filter: blur(4px);
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; width: 90%; max-width: 700px;
+    max-height: 90vh; overflow-y: auto;
+    padding: 28px;
+    animation: slideUp .3s ease;
+  }
+  @keyframes slideUp { from{transform:translateY(30px);opacity:0} to{transform:translateY(0);opacity:1} }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  .modal-title { font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 20px; color: var(--accent); }
+  .close-btn { background: none; border: none; color: var(--muted); font-size: 22px; cursor: pointer; padding: 4px; }
+  .close-btn:hover { color: var(--text); }
+
+  /* RAT PREVIEW */
+  #rat-preview {
+    background: #fff; color: #111; border-radius: 8px;
+    padding: 28px; margin-top: 16px; font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px; line-height: 1.6;
+  }
+  #rat-preview h2 { font-family: 'Rajdhani', sans-serif; font-size: 22px; color: #003366; border-bottom: 2px solid #003366; padding-bottom: 8px; margin-bottom: 16px; }
+  .rat-row { display: flex; gap: 16px; margin-bottom: 10px; }
+  .rat-field { flex: 1; }
+  .rat-field strong { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .07em; color: #666; }
+  .rat-field span { font-size: 13px; color: #111; font-weight: 500; }
+  .rat-section { margin: 16px 0 8px; font-weight: 700; font-size: 12px; text-transform: uppercase; color: #003366; letter-spacing: .08em; border-left: 3px solid #003366; padding-left: 8px; }
+  .rat-box { background: #f5f7fa; border: 1px solid #dde; border-radius: 4px; padding: 10px 12px; font-size: 13px; white-space: pre-wrap; }
+  .rat-sign { display: flex; gap: 24px; margin-top: 24px; }
+  .rat-sign-line { flex: 1; border-top: 1px solid #aaa; padding-top: 6px; font-size: 11px; color: #666; text-align: center; }
+  .rat-pecas table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .rat-pecas th, .rat-pecas td { padding: 6px 10px; border: 1px solid #dde; text-align: left; }
+  .rat-pecas th { background: #f0f4f8; }
+
+  /* NOTIFY TOAST */
+  #toast {
+    position: fixed; bottom: 24px; right: 24px; z-index: 300;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px 20px;
+    display: flex; align-items: center; gap: 12px;
+    transform: translateY(80px); opacity: 0;
+    transition: all .3s; max-width: 340px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.4);
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
+  #toast-icon { font-size: 18px; }
+  #toast-msg { font-size: 13px; }
+
+  /* ROUTE */
+  .route-card {
+    border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px;
+    background: var(--surface); display: flex; align-items: center; gap: 14px;
+    margin-bottom: 10px; transition: border-color .2s;
+  }
+  .route-card:hover { border-color: var(--accent); }
+  .route-num {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: rgba(0,212,255,.15); border: 1px solid var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: var(--accent);
+    flex-shrink: 0;
+  }
+  .route-info { flex: 1; }
+  .route-name { font-weight: 600; font-size: 14px; }
+  .route-addr { font-size: 12px; color: var(--label); }
+  .route-dist { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--accent); }
+
+  /* DIVIDER */
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+  .section-gap { margin-bottom: 20px; }
+
+  /* PARTS */
+  .part-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+  .part-row input { flex: 1; }
+  .part-row input:nth-child(2) { flex: .5; }
+  .part-row input:nth-child(3) { flex: .4; }
+
+  /* ASSINATURA DIGITAL */
+  .sig-canvas-wrap {
+    background: #fff; border: 2px dashed var(--border); border-radius: 8px;
+    overflow: hidden; position: relative; cursor: crosshair;
+  }
+  .sig-canvas-wrap canvas { display: block; touch-action: none; }
+  .sig-actions { display: flex; gap: 8px; margin-top: 6px; }
+
+  /* FOTOS */
+  .foto-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
+  .foto-thumb {
+    aspect-ratio: 1; border-radius: 6px; overflow: hidden;
+    border: 1px solid var(--border); position: relative; background: var(--surface);
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+  .foto-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .foto-thumb .del-foto {
+    position: absolute; top: 4px; right: 4px;
+    background: rgba(255,61,61,.85); border: none; border-radius: 4px;
+    color: #fff; font-size: 11px; cursor: pointer; padding: 2px 5px;
+  }
+  .foto-add {
+    aspect-ratio: 1; border-radius: 6px; border: 2px dashed var(--border);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 4px; color: var(--muted); font-size: 11px; cursor: pointer;
+    background: var(--surface); transition: border-color .2s;
+  }
+  .foto-add:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* NOTIFICAÇÕES */
+  .notif-item {
+    display: flex; gap: 12px; padding: 12px;
+    border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px;
+    background: var(--surface); transition: border-color .2s;
+  }
+  .notif-item:hover { border-color: var(--accent); }
+  .notif-item.urgente { border-color: var(--red); background: rgba(255,61,61,.05); }
+  .notif-item.hoje { border-color: var(--yellow); background: rgba(255,214,0,.05); }
+  .notif-icon { font-size: 22px; flex-shrink: 0; }
+  .notif-body { flex: 1; }
+  .notif-titulo { font-weight: 600; font-size: 14px; }
+  .notif-desc { font-size: 12px; color: var(--label); margin-top: 2px; }
+  .notif-badge { margin-top: 4px; }
+
+  /* RELATÓRIO MENSAL */
+  .rel-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px; display: flex;
+    align-items: center; gap: 14px; margin-bottom: 10px;
+  }
+  .rel-avatar {
+    width: 42px; height: 42px; border-radius: 50%;
+    background: rgba(0,212,255,.15); border: 1px solid var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 14px; color: var(--accent); flex-shrink: 0;
+  }
+  .rel-info { flex: 1; }
+  .rel-nome { font-weight: 600; font-size: 15px; }
+  .rel-stats { font-size: 12px; color: var(--label); margin-top: 3px; }
+  .rel-bar-wrap { height: 6px; background: var(--border); border-radius: 3px; margin-top: 6px; }
+  .rel-bar { height: 6px; border-radius: 3px; background: var(--accent); transition: width .6s; }
+
+  /* BADGE NO TAB */
+  .tab-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--red); color: #fff; font-size: 10px; font-weight: 700;
+    margin-left: 4px; vertical-align: middle;
+  }
+
+  /* CHAMADOS */
+  .chamado-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px 18px; margin-bottom: 10px;
+    transition: border-color .2s, transform .15s;
+    position: relative; overflow: hidden;
+  }
+  .chamado-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .chamado-card.prio-urgente { border-left: 4px solid var(--red); }
+  .chamado-card.prio-alta    { border-left: 4px solid var(--accent2); }
+  .chamado-card.prio-normal  { border-left: 4px solid var(--border); }
+  .chamado-card.status-concluido { opacity: .7; }
+  .chamado-header { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+  .chamado-num { font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--accent); }
+  .chamado-cliente { font-weight:700; font-size:15px; }
+  .chamado-problema { font-size:13px; color:var(--label); margin:6px 0; line-height:1.5; }
+  .chamado-meta { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:10px; font-size:12px; color:var(--muted); }
+  .chamado-actions { display:flex; gap:6px; flex-wrap:wrap; margin-top:12px; }
+  .chamado-filtro.active { color: var(--accent); border-color: var(--accent); background: rgba(0,212,255,.08); }
+
+  /* ASSINATURA CANVAS */
+  .sig-canvas {
+    border: 2px dashed var(--border); border-radius: 6px;
+    background: #fff; cursor: crosshair; display: block;
+    touch-action: none; width: 100%; height: 140px;
+  }
+  .sig-canvas.signed { border-color: var(--green); }
+
+  /* FOTOS */
+  .foto-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .foto-thumb {
+    width: 80px; height: 80px; border-radius: 6px; object-fit: cover;
+    border: 1px solid var(--border); cursor: pointer;
+    transition: transform .2s;
+  }
+  .foto-thumb:hover { transform: scale(1.05); }
+  .foto-add {
+    width: 80px; height: 80px; border-radius: 6px;
+    border: 2px dashed var(--border); display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 4px;
+    cursor: pointer; color: var(--muted); font-size: 11px;
+    transition: border-color .2s; background: var(--surface);
+  }
+  .foto-add:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* RELATÓRIO MENSAL */
+  .rel-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px; transition: border-color .2s;
+  }
+  .rel-card:hover { border-color: var(--accent); }
+  .rel-num { font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 32px; color: var(--accent); }
+  .rel-label { font-size: 11px; color: var(--label); text-transform: uppercase; letter-spacing: .06em; }
+
+  /* NOTIFICAÇÕES */
+  .notif-item {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 12px 0; border-bottom: 1px solid var(--border);
+  }
+  .notif-item:last-child { border-bottom: none; }
+  .notif-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+  .notif-title { font-weight: 600; font-size: 13px; }
+  .notif-sub { font-size: 12px; color: var(--label); margin-top: 2px; }
+  .notif-time { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); margin-top: 4px; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    FB <span>Informática</span> · Field Ops
+  </div>
+  <div class="header-right">
+    <div id="sheet-status"><span class="badge badge-yellow">☁ Configurar Sheets</span></div>
+    <button class="btn btn-ghost btn-sm" onclick="configurarURL()" style="font-size:11px;padding:5px 10px">⚙ URL</button>
+    <div class="badge-online"><div class="pulse"></div> Sistema Ativo</div>
+    <div id="clock">--:--:--</div>
+  </div>
+</header>
+
+<nav>
+  <button class="tab active" onclick="showView('dashboard')">📊 Dashboard</button>
+  <button class="tab" onclick="showView('chamados')" id="tab-chamados">🎫 Chamados</button>
+  <button class="tab" onclick="showView('checkin')">📍 Check-in/out</button>
+  <button class="tab" onclick="showView('rat')">📋 Nova RAT</button>
+  <button class="tab" onclick="showView('rotas')">🗺️ Rotas</button>
+  <button class="tab" onclick="showView('historico')">📁 Histórico</button>
+  <button class="tab" onclick="showView('cadastros')">👥 Cadastros</button>
+  <button class="tab" onclick="showView('relatorio')">📊 Relatório</button>
+  <button class="tab" onclick="showView('notificacoes')" id="tab-notif">🔔 Alertas</button>
+</nav>
+
+<main>
+
+<!-- ========================= DASHBOARD ========================= -->
+<div id="view-dashboard" class="view active">
+  <div class="grid-4 section-gap">
+    <div class="card stat">
+      <div class="stat-val" id="dash-total">0</div>
+      <div class="stat-label">RATs hoje</div>
+    </div>
+    <div class="card stat">
+      <div class="stat-val" style="color:var(--green)" id="dash-em-campo">0</div>
+      <div class="stat-label">Em campo</div>
+    </div>
+    <div class="card stat">
+      <div class="stat-val" style="color:var(--accent2)" id="dash-concluidas">0</div>
+      <div class="stat-label">Concluídas</div>
+    </div>
+    <div class="card stat">
+      <div class="stat-val" style="color:var(--yellow)" id="dash-pendentes">0</div>
+      <div class="stat-label">Pendentes</div>
+    </div>
+    <div class="card stat" style="cursor:pointer" onclick="document.querySelector('[onclick*=chamados]').click()">
+      <div class="stat-val" style="color:var(--red)" id="dash-chamados-abertos">0</div>
+      <div class="stat-label">Chamados Abertos</div>
+    </div>
+  </div>
+
+  <!-- PAINEL SHEETS -->
+  <div class="card section-gap" id="sheets-config-panel" style="border-color:var(--accent);background:rgba(0,212,255,.04)">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+      <div>
+        <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:15px;color:var(--accent)">☁ Integração Google Sheets</div>
+        <div style="font-size:12px;color:var(--label);margin-top:3px" id="sheets-url-preview">URL não configurada</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="configurarURL()">⚙ Configurar URL</button>
+        <button class="btn btn-ghost btn-sm" onclick="testarConexao()">🔍 Testar Conexão</button>
+        <button class="btn btn-ghost btn-sm" onclick="syncManual()">🔄 Sincronizar Agora</button>
+        <span id="pending-badge" style="display:none" class="badge badge-yellow">0 pendentes</span>
+      </div>
+    </div>
+    <div id="diag-log" style="margin-top:12px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--label);background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px;max-height:100px;overflow-y:auto;display:none"></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Status dos Técnicos</div>
+      <div id="tech-status-list">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Atividades Recentes</div>
+      <div class="timeline" id="timeline-feed">
+        <div class="tl-item"><div class="tl-time">Aguardando atividade...</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========================= CHAMADOS ========================= -->
+<div id="view-chamados" class="view">
+
+  <!-- KANBAN HEADER + BOTÃO NOVO -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm chamado-filtro active" data-status="todos"    onclick="filtrarChamados('todos',this)">Todos</button>
+      <button class="btn btn-ghost btn-sm chamado-filtro"        data-status="aberto"   onclick="filtrarChamados('aberto',this)">🔴 Abertos</button>
+      <button class="btn btn-ghost btn-sm chamado-filtro"        data-status="agendado" onclick="filtrarChamados('agendado',this)">🟡 Agendados</button>
+      <button class="btn btn-ghost btn-sm chamado-filtro"        data-status="em_atendimento" onclick="filtrarChamados('em_atendimento',this)">🔵 Em Atendimento</button>
+      <button class="btn btn-ghost btn-sm chamado-filtro"        data-status="concluido" onclick="filtrarChamados('concluido',this)">🟢 Concluídos</button>
+    </div>
+    <button class="btn btn-primary" onclick="abrirModalChamado()">+ Novo Chamado</button>
+  </div>
+
+  <!-- BUSCA -->
+  <div class="card" style="margin-bottom:16px;padding:12px 16px">
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <input id="busca-chamado" type="text" placeholder="🔍 Buscar por cliente, técnico ou descrição..."
+        oninput="renderChamados()" style="flex:1;min-width:200px">
+      <select id="filtro-tec-chamado" onchange="renderChamados()" style="min-width:160px">
+        <option value="">Todos os técnicos</option>
+      </select>
+      <input id="filtro-data-chamado" type="date" onchange="renderChamados()" title="Filtrar por data de agendamento">
+    </div>
+  </div>
+
+  <!-- LISTA DE CHAMADOS -->
+  <div id="chamados-lista"></div>
+
+</div>
+
+<!-- ========================= CHECK-IN ========================= -->
+<div id="view-checkin" class="view">
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">GPS & Localização</div>
+      <div id="map-box">
+        <span style="font-size:32px">📡</span>
+        <span id="gps-status">Aguardando localização...</span>
+        <span id="gps-coords">---, ---</span>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="getGPS()" style="margin-bottom:12px">🔄 Atualizar GPS</button>
+
+      <div class="form-group">
+        <label>Técnico</label>
+        <select id="ci-tecnico">
+          <option value="">— Selecionar —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Cliente / Local</label>
+        <input id="ci-cliente" type="text" placeholder="Nome do cliente">
+      </div>
+      <div class="form-group">
+        <label>Endereço</label>
+        <input id="ci-endereco" type="text" placeholder="Endereço da visita">
+      </div>
+      <div class="form-group">
+        <label>Tipo de Serviço</label>
+        <select id="ci-tipo">
+          <option>CFTV / Câmeras</option>
+          <option>Infraestrutura de Rede</option>
+          <option>Suporte TI</option>
+          <option>Instalação de Equipamentos</option>
+          <option>Manutenção Preventiva</option>
+          <option>Outro</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Controle de Visita</div>
+      <div id="checkin-status">
+        <div id="status-dot"></div>
+        <div>
+          <div id="status-text">Nenhuma visita ativa</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px" id="status-timer"></div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-bottom:20px">
+        <button class="btn btn-success" id="btn-checkin" onclick="doCheckin()" style="flex:1">▶ Check-in</button>
+        <button class="btn btn-danger" id="btn-checkout" onclick="doCheckout()" style="flex:1" disabled>■ Check-out</button>
+      </div>
+
+      <div class="divider"></div>
+      <div class="card-title">Registros do Dia</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Técnico</th><th>Cliente</th><th>Entrada</th><th>Saída</th><th>Duração</th>
+          </tr></thead>
+          <tbody id="checkin-table-body">
+            <tr><td colspan="5" style="color:var(--muted);text-align:center;padding:20px">Nenhum registro hoje</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========================= RAT ========================= -->
+<div id="view-rat" class="view">
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Relatório de Atendimento Técnico</div>
+
+      <div class="form-group">
+        <label>Nº RAT</label>
+        <input id="rat-num" type="text" readonly style="color:var(--accent);font-family:'IBM Plex Mono',monospace">
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Técnico Responsável</label>
+          <select id="rat-tecnico">
+            <option value="">— Selecionar —</option>
+            <option>João Silva</option>
+            <option>Carlos Mendes</option>
+            <option>Rafael Lima</option>
+            <option>Marcos Souza</option>
+            <option>Pedro Costa</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Data</label>
+          <input id="rat-data" type="date">
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="card-title">Dados do Cliente</div>
+      <div class="form-group">
+        <label>Empresa / Cliente</label>
+        <input id="rat-cliente" type="text" placeholder="Razão social ou nome">
+      </div>
+      <div class="form-group">
+        <label>Solicitante</label>
+        <input id="rat-solicitante" type="text" placeholder="Nome do contato no cliente">
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label>E-mail do Cliente</label>
+          <input id="rat-email-cliente" type="email" placeholder="cliente@empresa.com">
+        </div>
+        <div class="form-group">
+          <label>Telefone</label>
+          <input id="rat-tel" type="tel" placeholder="(00) 00000-0000">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Endereço</label>
+        <input id="rat-end" type="text" placeholder="Endereço completo">
+      </div>
+
+      <div class="divider"></div>
+      <div class="card-title">Detalhes do Atendimento</div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Hora de Entrada</label>
+          <input id="rat-entrada" type="time">
+        </div>
+        <div class="form-group">
+          <label>Hora de Saída</label>
+          <input id="rat-saida" type="time">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Tipo de Serviço</label>
+        <select id="rat-tipo">
+          <option>CFTV / Câmeras de Segurança</option>
+          <option>Infraestrutura de Rede</option>
+          <option>Suporte de TI</option>
+          <option>Instalação de Equipamentos</option>
+          <option>Manutenção Preventiva</option>
+          <option>Outro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Problema Relatado</label>
+        <textarea id="rat-problema" placeholder="Descreva o problema conforme relatado pelo cliente..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Solução Implantada</label>
+        <textarea id="rat-solucao" placeholder="Descreva detalhadamente a solução aplicada..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Observações / Pendências</label>
+        <textarea id="rat-obs" placeholder="Pendências, recomendações ou próximos passos..."></textarea>
+      </div>
+
+      <div class="divider"></div>
+      <div class="card-title">Peças / Materiais Utilizados</div>
+      <div id="pecas-list"></div>
+      <button class="btn btn-ghost btn-sm" onclick="addPeca()">+ Adicionar Peça</button>
+
+      <div class="divider"></div>
+      <div class="card-title">📸 Fotos de Evidência</div>
+      <div class="foto-grid" id="fotos-grid">
+        <div class="foto-add" onclick="document.getElementById('foto-input').click()">
+          <span style="font-size:24px">📷</span>
+          <span>Adicionar</span>
+        </div>
+      </div>
+      <input type="file" id="foto-input" accept="image/*" multiple style="display:none" onchange="adicionarFotos(this)">
+
+      <div class="divider"></div>
+      <div class="card-title">✍️ Assinatura do Cliente</div>
+      <div style="margin-bottom:6px;font-size:12px;color:var(--label)">Solicite ao cliente que assine abaixo:</div>
+      <canvas id="sig-canvas" class="sig-canvas"></canvas>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn btn-ghost btn-sm" onclick="limparAssinatura()">🗑 Limpar</button>
+        <span id="sig-status" style="font-size:12px;color:var(--muted);align-self:center"></span>
+      </div>
+
+      <div class="divider"></div>
+      <div class="card-title">Envio do RAT</div>
+      <div class="form-group">
+        <label>E-mail da Sede (FB Informática)</label>
+        <input id="rat-email-sede" type="email" value="contato@fbinformatica.com.br">
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px">
+        <button class="btn btn-primary" onclick="gerarRAT()">👁 Visualizar RAT</button>
+        <button class="btn btn-warn" onclick="enviarWhatsApp()">📱 Enviar via WhatsApp</button>
+        <button class="btn btn-success" onclick="salvarRAT()">💾 Salvar RAT</button>
+        <button class="btn btn-ghost" onclick="imprimirRAT()">🖨️ Imprimir</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Prévia da RAT</div>
+      <div id="rat-preview">
+        <div style="text-align:center;padding:40px 20px;color:#999;font-size:13px">
+          Preencha o formulário e clique em<br><strong>Visualizar RAT</strong> para ver a prévia.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========================= ROTAS ========================= -->
+<div id="view-rotas" class="view">
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Planejar Rota do Dia</div>
+      <div class="form-group">
+        <label>Técnico</label>
+        <select id="rota-tecnico">
+          <option value="">— Selecionar —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Ponto de Partida</label>
+        <input id="rota-origem" type="text" placeholder="Endereço de saída">
+      </div>
+      <div id="rota-stops"></div>
+      <div style="display:flex;gap:10px;margin-top:8px">
+        <button class="btn btn-ghost btn-sm" onclick="addStop()">+ Parada</button>
+        <button class="btn btn-primary btn-sm" onclick="otimizarRota()">🧭 Otimizar Rota</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Rota Otimizada</div>
+      <div id="rota-result">
+        <div style="color:var(--muted);font-size:13px;padding:20px 0">
+          Adicione paradas e clique em Otimizar Rota.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">Abrir no Google Maps</div>
+    <div id="maps-link" style="color:var(--muted);font-size:13px">
+      A rota otimizada irá gerar um link para navegação.
+    </div>
+  </div>
+</div>
+
+<!-- ========================= HISTÓRICO ========================= -->
+<div id="view-historico" class="view">
+  <div class="card">
+    <div class="card-title">Filtros</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:0">
+      <div style="flex:1;min-width:160px">
+        <label style="font-size:11px;color:var(--label);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.07em">Técnico</label>
+        <select id="hist-tecnico" onchange="renderHistorico()">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div style="flex:1;min-width:160px">
+        <label style="font-size:11px;color:var(--label);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.07em">De</label>
+        <input id="hist-de" type="date" onchange="renderHistorico()">
+      </div>
+      <div style="flex:1;min-width:160px">
+        <label style="font-size:11px;color:var(--label);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.07em">Até</label>
+        <input id="hist-ate" type="date" onchange="renderHistorico()">
+      </div>
+      <div style="flex:1;min-width:160px">
+        <label style="font-size:11px;color:var(--label);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.07em">Status</label>
+        <select id="hist-status" onchange="renderHistorico()">
+          <option value="">Todos</option>
+          <option value="concluida">Concluída</option>
+          <option value="pendente">Pendente</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:flex-end">
+        <button class="btn btn-ghost btn-sm" onclick="exportarCSV()">⬇ Exportar CSV</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">RATs Registradas</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Nº RAT</th><th>Data</th><th>Técnico</th><th>Cliente</th>
+          <th>Tipo</th><th>Entrada</th><th>Saída</th><th>Status</th><th>Ações</th>
+        </tr></thead>
+        <tbody id="hist-table"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ========================= CADASTROS ========================= -->
+<div id="view-cadastros" class="view">
+
+  <!-- SUB-TABS -->
+  <div style="display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0">
+    <button class="tab active" id="sub-tab-tecnicos" onclick="showSubTab('tecnicos')" style="font-size:12px;padding:8px 16px">👷 Técnicos</button>
+    <button class="tab" id="sub-tab-clientes" onclick="showSubTab('clientes')" style="font-size:12px;padding:8px 16px">🏢 Clientes</button>
+  </div>
+
+  <!-- TÉCNICOS -->
+  <div id="sub-view-tecnicos">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Novo Técnico</div>
+        <div class="form-group"><label>Nome Completo</label><input id="tec-nome" type="text" placeholder="Nome do técnico"></div>
+        <div class="form-group"><label>Telefone / WhatsApp</label><input id="tec-tel" type="tel" placeholder="(82) 99999-9999"></div>
+        <div class="form-group"><label>E-mail</label><input id="tec-email" type="email" placeholder="tecnico@fbinformatica.com.br"></div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Especialidade</label>
+            <select id="tec-esp">
+              <option>CFTV / Câmeras</option>
+              <option>Redes / Infraestrutura</option>
+              <option>Suporte TI</option>
+              <option>CFTV + Redes</option>
+              <option>Generalista</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select id="tec-status">
+              <option value="ativo">Ativo</option>
+              <option value="inativo">Inativo</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group"><label>Observações</label><textarea id="tec-obs" placeholder="Certificações, veículo, etc..." style="min-height:60px"></textarea></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" onclick="salvarTecnico()">💾 Salvar Técnico</button>
+          <button class="btn btn-ghost" onclick="limparFormTecnico()">✕ Limpar</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Técnicos Cadastrados</div>
+        <div style="margin-bottom:12px">
+          <input id="busca-tecnico" type="text" placeholder="🔍 Buscar técnico..." oninput="renderTabelaTecnicos()" style="width:100%">
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Nome</th><th>Especialidade</th><th>Telefone</th><th>Status</th><th></th></tr></thead>
+            <tbody id="tbody-tecnicos"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLIENTES -->
+  <div id="sub-view-clientes" style="display:none">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Novo Cliente</div>
+        <div class="form-group"><label>Razão Social / Nome</label><input id="cli-nome" type="text" placeholder="Nome da empresa ou cliente"></div>
+        <div class="form-group"><label>CNPJ / CPF</label><input id="cli-doc" type="text" placeholder="00.000.000/0001-00"></div>
+        <div class="grid-2">
+          <div class="form-group"><label>Telefone</label><input id="cli-tel" type="tel" placeholder="(82) 99999-9999"></div>
+          <div class="form-group"><label>E-mail</label><input id="cli-email" type="email" placeholder="contato@empresa.com"></div>
+        </div>
+        <div class="form-group"><label>Endereço</label><input id="cli-end" type="text" placeholder="Rua, número, bairro"></div>
+        <div class="grid-2">
+          <div class="form-group"><label>Cidade</label><input id="cli-cidade" type="text" placeholder="Maceió"></div>
+          <div class="form-group"><label>Estado</label><input id="cli-estado" type="text" placeholder="AL" maxlength="2"></div>
+        </div>
+        <div class="form-group"><label>Nome do Contato / Responsável</label><input id="cli-contato" type="text" placeholder="Nome do responsável"></div>
+        <div class="form-group"><label>Tipo de Contrato</label>
+          <select id="cli-contrato">
+            <option value="">Sem contrato</option>
+            <option value="mensal">Mensal</option>
+            <option value="trimestral">Trimestral</option>
+            <option value="anual">Anual</option>
+            <option value="avulso">Avulso</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Observações</label><textarea id="cli-obs" placeholder="Horário de atendimento, acesso, senhas padrão..." style="min-height:60px"></textarea></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" onclick="salvarCliente()">💾 Salvar Cliente</button>
+          <button class="btn btn-ghost" onclick="limparFormCliente()">✕ Limpar</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Clientes Cadastrados</div>
+        <div style="margin-bottom:12px;display:flex;gap:8px">
+          <input id="busca-cliente" type="text" placeholder="🔍 Buscar cliente..." oninput="renderTabelaClientes()" style="flex:1">
+          <select id="filtro-contrato" onchange="renderTabelaClientes()" style="width:130px">
+            <option value="">Todos</option>
+            <option value="mensal">Mensal</option>
+            <option value="trimestral">Trimestral</option>
+            <option value="anual">Anual</option>
+            <option value="avulso">Avulso</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Nome</th><th>Contato</th><th>Cidade</th><th>Contrato</th><th></th></tr></thead>
+            <tbody id="tbody-clientes"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ========================= RELATÓRIO MENSAL ========================= -->
+<div id="view-relatorio" class="view">
+  <div class="card section-gap">
+    <div class="card-title">Filtros do Relatório</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+      <div>
+        <label style="font-size:11px;color:var(--label);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.07em">Técnico</label>
+        <select id="rel-tecnico" onchange="gerarRelatorio()" style="min-width:160px">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--label);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.07em">Mês</label>
+        <input type="month" id="rel-mes" onchange="gerarRelatorio()" style="min-width:140px">
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="gerarRelatorio()">📊 Gerar</button>
+      <button class="btn btn-ghost btn-sm" onclick="exportarRelatorioCSV()">⬇ CSV</button>
+      <button class="btn btn-ghost btn-sm" onclick="imprimirRelatorio()">🖨️ Imprimir</button>
+    </div>
+  </div>
+
+  <div id="rel-resumo" class="grid-4 section-gap" style="display:none">
+    <div class="card rel-card">
+      <div class="rel-num" id="rel-total">0</div>
+      <div class="rel-label">Total de RATs</div>
+    </div>
+    <div class="card rel-card">
+      <div class="rel-num" id="rel-horas" style="color:var(--green)">0h</div>
+      <div class="rel-label">Horas em Campo</div>
+    </div>
+    <div class="card rel-card">
+      <div class="rel-num" id="rel-clientes" style="color:var(--accent2)">0</div>
+      <div class="rel-label">Clientes Atendidos</div>
+    </div>
+    <div class="card rel-card">
+      <div class="rel-num" id="rel-pecas" style="color:var(--yellow)">0</div>
+      <div class="rel-label">Peças Utilizadas</div>
+    </div>
+  </div>
+
+  <div id="rel-por-tecnico" style="display:none;margin-bottom:20px"></div>
+
+  <div class="card" id="rel-tabela-card" style="display:none">
+    <div class="card-title">Detalhamento dos Atendimentos</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Nº RAT</th><th>Data</th><th>Técnico</th><th>Cliente</th>
+          <th>Tipo</th><th>Entrada</th><th>Saída</th><th>Duração</th><th>Status</th>
+        </tr></thead>
+        <tbody id="rel-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ========================= NOTIFICAÇÕES ========================= -->
+<div id="view-notificacoes" class="view">
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Central de Alertas</div>
+      <div id="notif-list">
+        <div style="color:var(--muted);font-size:13px;padding:20px 0">Verificando pendências...</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Configurar Alertas</div>
+      <div style="font-size:13px;color:var(--label);margin-bottom:16px">
+        Defina após quantos dias uma RAT pendente gera alerta:
+      </div>
+      <div class="form-group">
+        <label>Dias para alerta de RAT pendente</label>
+        <input type="number" id="cfg-dias-alerta" min="1" max="30" value="3" style="width:100px">
+      </div>
+      <div class="form-group">
+        <label>Dias para alerta de check-in sem checkout</label>
+        <input type="number" id="cfg-dias-checkin" min="1" max="7" value="1" style="width:100px">
+      </div>
+      <div class="form-group">
+        <label>Notificações no browser</label>
+        <button class="btn btn-ghost btn-sm" onclick="pedirPermissaoNotif()">🔔 Ativar Notificações</button>
+        <span id="notif-perm-status" style="font-size:12px;color:var(--label);margin-left:8px"></span>
+      </div>
+      <button class="btn btn-primary" onclick="verificarAlertas()">🔄 Verificar Agora</button>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- CHAMADO MODAL -->
+<div class="modal-overlay" id="chamado-modal">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-header">
+      <div class="modal-title" id="chamado-modal-title">🎫 Novo Chamado</div>
+      <button class="close-btn" onclick="fecharModalChamado()">✕</button>
+    </div>
+
+    <input type="hidden" id="chamado-edit-id">
+
+    <div class="grid-2">
+      <div class="form-group">
+        <label>Cliente *</label>
+        <input id="ch-cliente" type="text" placeholder="Nome do cliente" list="dl-clientes">
+      </div>
+      <div class="form-group">
+        <label>Solicitante / Contato</label>
+        <input id="ch-solicitante" type="text" placeholder="Nome do contato">
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label>Telefone</label>
+        <input id="ch-tel" type="tel" placeholder="(82) 99999-9999">
+      </div>
+      <div class="form-group">
+        <label>E-mail</label>
+        <input id="ch-email" type="email" placeholder="cliente@email.com">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Endereço</label>
+      <input id="ch-end" type="text" placeholder="Endereço do atendimento" list="dl-enderecos">
+    </div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label>Tipo de Serviço</label>
+        <select id="ch-tipo">
+          <option>CFTV / Câmeras de Segurança</option>
+          <option>Infraestrutura de Rede</option>
+          <option>Suporte de TI</option>
+          <option>Instalação de Equipamentos</option>
+          <option>Manutenção Preventiva</option>
+          <option>Outro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Prioridade</label>
+        <select id="ch-prioridade">
+          <option value="normal">Normal</option>
+          <option value="alta">Alta</option>
+          <option value="urgente">Urgente</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Problema Relatado *</label>
+      <textarea id="ch-problema" placeholder="Descreva o problema conforme relatado pelo cliente..." style="min-height:90px"></textarea>
+    </div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label>Técnico Responsável</label>
+        <select id="ch-tecnico">
+          <option value="">— A definir —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Data de Agendamento</label>
+        <input id="ch-data" type="date">
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label>Hora Prevista</label>
+        <input id="ch-hora" type="time">
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="ch-status">
+          <option value="aberto">🔴 Aberto</option>
+          <option value="agendado">🟡 Agendado</option>
+          <option value="em_atendimento">🔵 Em Atendimento</option>
+          <option value="concluido">🟢 Concluído</option>
+          <option value="cancelado">⚫ Cancelado</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Observações Internas</label>
+      <textarea id="ch-obs" placeholder="Anotações internas (não aparecem na RAT)..." style="min-height:60px"></textarea>
+    </div>
+
+    <div id="ch-historico-section" style="display:none">
+      <div class="divider"></div>
+      <div class="card-title">Histórico do Chamado</div>
+      <div id="ch-historico-list" style="font-size:12px;color:var(--label)"></div>
+    </div>
+
+    <div class="divider"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="salvarChamado()">💾 Salvar Chamado</button>
+      <button class="btn btn-success" id="btn-gerar-rat-chamado" onclick="gerarRATdoChamado()" style="display:none">📋 Gerar RAT</button>
+      <button class="btn btn-ghost" onclick="fecharModalChamado()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDITAR RAT MODAL -->
+<div class="modal-overlay" id="edit-rat-modal">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-header">
+      <div class="modal-title">✏️ Editar RAT <span id="edit-rat-num-title" style="color:var(--muted);font-size:14px"></span></div>
+      <button class="close-btn" onclick="document.getElementById('edit-rat-modal').classList.remove('open')">✕</button>
+    </div>
+    <input type="hidden" id="edit-rat-idx">
+
+    <div class="grid-2">
+      <div class="form-group"><label>Técnico</label>
+        <select id="edit-tecnico"><option value="">— Selecionar —</option></select></div>
+      <div class="form-group"><label>Data</label>
+        <input id="edit-data" type="date"></div>
+    </div>
+    <div class="grid-2">
+      <div class="form-group"><label>Cliente</label>
+        <input id="edit-cliente" type="text" list="dl-clientes"></div>
+      <div class="form-group"><label>Solicitante</label>
+        <input id="edit-solicitante" type="text"></div>
+    </div>
+    <div class="grid-2">
+      <div class="form-group"><label>Hora Entrada</label>
+        <input id="edit-entrada" type="time"></div>
+      <div class="form-group"><label>Hora Saída</label>
+        <input id="edit-saida" type="time"></div>
+    </div>
+    <div class="form-group"><label>Tipo de Serviço</label>
+      <select id="edit-tipo">
+        <option>CFTV / Câmeras de Segurança</option>
+        <option>Infraestrutura de Rede</option>
+        <option>Suporte de TI</option>
+        <option>Instalação de Equipamentos</option>
+        <option>Manutenção Preventiva</option>
+        <option>Outro</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Problema Relatado</label>
+      <textarea id="edit-problema" style="min-height:80px"></textarea></div>
+    <div class="form-group"><label>Solução Implantada</label>
+      <textarea id="edit-solucao" style="min-height:80px"></textarea></div>
+    <div class="form-group"><label>Observações / Pendências</label>
+      <textarea id="edit-obs" style="min-height:60px"></textarea></div>
+    <div class="form-group"><label>Status</label>
+      <select id="edit-status">
+        <option value="concluida">Concluída</option>
+        <option value="pendente">Pendente</option>
+      </select>
+    </div>
+
+    <div class="divider"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="salvarEdicaoRAT()">💾 Salvar Alterações</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('edit-rat-modal').classList.remove('open')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIG MODAL -->
+<div class="modal-overlay" id="config-modal">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <div class="modal-title">⚙ Configurar Google Sheets</div>
+      <button class="close-btn" onclick="document.getElementById('config-modal').classList.remove('open')">✕</button>
+    </div>
+
+    <div style="font-size:13px;color:var(--label);margin-bottom:16px;line-height:1.6">
+      Cole abaixo a URL gerada ao publicar o Apps Script.<br>
+      <span style="color:var(--muted);font-size:12px">Extensões → Apps Script → Implantar → Nova implantação → Aplicativo Web → copiar URL</span>
+    </div>
+
+    <div class="form-group">
+      <label>URL do Web App</label>
+      <input id="config-url-input" type="text"
+        placeholder="https://script.google.com/macros/s/XXXX/exec"
+        style="font-family:'IBM Plex Mono',monospace;font-size:12px">
+    </div>
+
+    <div id="config-url-status" style="font-size:12px;margin-bottom:12px;min-height:18px"></div>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="salvarConfigURL()">💾 Salvar e Testar</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('config-modal').classList.remove('open')">Cancelar</button>
+      <button class="btn btn-danger btn-sm" onclick="limparURL()" style="margin-left:auto">🗑 Limpar URL</button>
+    </div>
+
+    <div style="margin-top:16px;padding:12px;background:var(--surface);border-radius:6px;border:1px solid var(--border)">
+      <div style="font-size:11px;font-weight:700;color:var(--label);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Configurações do Apps Script</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.8">
+        ✅ Executar como: <strong style="color:var(--text)">Minha conta</strong><br>
+        ✅ Quem tem acesso: <strong style="color:var(--text)">Qualquer pessoa</strong><br>
+        ✅ Após publicar: cole a URL do tipo <code style="color:var(--accent)">/exec</code>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RAT MODAL -->
+<div class="modal-overlay" id="rat-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">📋 Relatório de Atendimento Técnico</div>
+      <button class="close-btn" onclick="closeModal()">✕</button>
+    </div>
+    <div id="rat-modal-content"></div>
+    <div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="imprimirRAT()">🖨️ Imprimir</button>
+      <button class="btn btn-warn" onclick="enviarWhatsApp()">📱 WhatsApp Cliente</button>
+      <button class="btn btn-ghost" onclick="closeModal()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast">
+  <span id="toast-icon">✅</span>
+  <span id="toast-msg">Operação realizada com sucesso.</span>
+</div>
+
+<script>
+// ===================== CONFIGURAÇÃO GOOGLE SHEETS =====================
+// Cole aqui a URL do seu Web App após publicar o Apps Script
+const SHEET_URL = localStorage.getItem('fb_sheet_url') || '';
+
+// ===================== STATE =====================
+let rats = JSON.parse(localStorage.getItem('fb_rats') || '[]');
+let checkins = JSON.parse(localStorage.getItem('fb_checkins') || '[]');
+let activeCheckin = JSON.parse(localStorage.getItem('fb_active_checkin') || 'null');
+let ratCounter = parseInt(localStorage.getItem('fb_rat_counter') || '1');
+let currentGPS = null;
+let timerInterval = null;
+let stopCount = 1;
+let sheetOnline = false;
+
+// Técnicos e Clientes carregados do cadastro local
+let tecnicos  = JSON.parse(localStorage.getItem('fb_tecnicos') || '[]');
+let clientes  = JSON.parse(localStorage.getItem('fb_clientes') || '[]');
+
+// Seed inicial se vazio
+if (!tecnicos.length) {
+  tecnicos = [
+    { id: 1, nome: 'João Silva',    tel: '', email: '', esp: 'CFTV / Câmeras',      status: 'ativo', obs: '' },
+    { id: 2, nome: 'Carlos Mendes', tel: '', email: '', esp: 'Redes / Infraestrutura', status: 'ativo', obs: '' },
+    { id: 3, nome: 'Rafael Lima',   tel: '', email: '', esp: 'Suporte TI',           status: 'ativo', obs: '' },
+    { id: 4, nome: 'Marcos Souza',  tel: '', email: '', esp: 'CFTV + Redes',         status: 'ativo', obs: '' },
+    { id: 5, nome: 'Pedro Costa',   tel: '', email: '', esp: 'Generalista',          status: 'ativo', obs: '' },
+  ];
+  localStorage.setItem('fb_tecnicos', JSON.stringify(tecnicos));
+}
+
+// ===================== GOOGLE SHEETS API =====================
+// Estratégia: JSONP para GET (contorna CORS em file:// e qualquer host)
+//             fetch URLSearchParams para POST (sem preflight)
+// Apps Script deve estar publicado como: Executar como EU, Acesso QUALQUER PESSOA.
+
+// ---------- GET via JSONP (único método que funciona em file://) ----------
+function sheetGetJSONP(acao, params = {}, urlOverride = '') {
+  return new Promise((resolve) => {
+    const url = urlOverride || window._SHEET_URL_LIVE || localStorage.getItem('fb_sheet_url') || '';
+    if (!url) { resolve(null); return; }
+    const cbName = '__gsCallback_' + Date.now();
+    const qs = new URLSearchParams({ acao, callback: cbName, ...params }).toString();
+    const script = document.createElement('script');
+    const timer = setTimeout(() => {
+      cleanup(); resolve(null);
+    }, 12000);
+    window[cbName] = (data) => { cleanup(); resolve(data); };
+    function cleanup() {
+      clearTimeout(timer);
+      delete window[cbName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+    }
+    script.src = `${url}?${qs}`;
+    script.onerror = () => { cleanup(); resolve(null); };
+    document.head.appendChild(script);
+  });
+}
+
+// ---------- POST via fetch com URLSearchParams ----------
+async function sheetPost(acao, data) {
+  const url = window._SHEET_URL_LIVE || localStorage.getItem('fb_sheet_url') || '';
+  if (!url) return null;
+  try {
+    const body = new URLSearchParams();
+    body.append('payload', JSON.stringify({ acao, data }));
+    const res = await fetch(url, {
+      method: 'POST',
+      body,
+      redirect: 'follow'
+    });
+    const text = await res.text();
+    try { return JSON.parse(text); } catch { return { ok: true }; }
+  } catch (e) {
+    console.warn('sheetPost error:', e.message);
+    return null;
+  }
+}
+
+async function pingSheet() {
+  const url = window._SHEET_URL_LIVE || localStorage.getItem('fb_sheet_url') || '';
+  if (!url) { updateSheetStatus(false); return; }
+  updateSheetStatus('checking');
+  const r = await sheetGetJSONP('ping');
+  sheetOnline = !!(r && r.ok);
+  updateSheetStatus(sheetOnline);
+  if (sheetOnline) { flushQueue(); syncFromSheet(); }
+}
+
+function updateSheetStatus(state) {
+  const el = document.getElementById('sheet-status');
+  if (!el) return;
+  if (state === 'checking') {
+    el.innerHTML = `<span class="badge badge-yellow">☁ Verificando...</span>`;
+  } else if (state === true) {
+    el.innerHTML = `<span class="badge badge-green">☁ Sheets Conectado</span>`;
+  } else {
+    el.innerHTML = `<span class="badge badge-red" style="cursor:pointer" onclick="pingSheet()" title="Clique para tentar novamente">☁ Sheets Offline ↺</span>`;
+  }
+}
+
+async function syncFromSheet() {
+  // Carrega RATs do Sheets para o estado local
+  const r = await sheetGetJSONP('listarRATs');
+  if (r && r.ok && r.rats && r.rats.length) {
+    // Mapeia colunas do Sheets → formato interno
+    const mapped = r.rats.map(row => ({
+      num:          row['Nº RAT']           || '',
+      data:         row['Data']             || '',
+      tecnico:      row['Técnico']          || '',
+      cliente:      row['Cliente']          || '',
+      solicitante:  row['Solicitante']      || '',
+      emailCliente: row['Email Cliente']    || '',
+      tel:          row['Telefone']         || '',
+      end:          row['Endereço']         || '',
+      tipo:         row['Tipo Serviço']     || '',
+      entrada:      row['Hora Entrada']     || '',
+      saida:        row['Hora Saída']       || '',
+      problema:     row['Problema Relatado']|| '',
+      solucao:      row['Solução Implantada']|| '',
+      obs:          row['Observações']      || '',
+      status:       row['Status']           || 'concluida',
+      pecas:        [],
+      createdAt:    Date.now(),
+    }));
+    rats = mapped;
+    localStorage.setItem('fb_rats', JSON.stringify(rats));
+    renderDashboard();
+    renderHistorico();
+  }
+}
+
+// Fila de envios offline
+let pendingQueue = JSON.parse(localStorage.getItem('fb_pending') || '[]');
+
+async function flushQueue() {
+  const url = window._SHEET_URL_LIVE || localStorage.getItem('fb_sheet_url') || '';
+  if (!url || !pendingQueue.length) return;
+  const todo = [...pendingQueue];
+  pendingQueue = [];
+  localStorage.setItem('fb_pending', '[]');
+  let falhas = 0;
+  for (const item of todo) {
+    const r = await sheetPost(item.acao, item.data);
+    if (!r || !r.ok) {
+      pendingQueue.push(item);
+      falhas++;
+    }
+  }
+  localStorage.setItem('fb_pending', JSON.stringify(pendingQueue));
+  if (falhas === 0 && todo.length > 0) {
+    toast(`${todo.length} registro(s) sincronizado(s) com Sheets ☁`, '✅');
+  }
+}
+
+async function sendOrQueue(acao, data) {
+  const url = window._SHEET_URL_LIVE || localStorage.getItem('fb_sheet_url') || '';
+  if (url) {
+    const r = await sheetPost(acao, data);
+    if (r && r.ok) return true;
+  }
+  // Offline: enfileirar
+  pendingQueue.push({ acao, data });
+  localStorage.setItem('fb_pending', JSON.stringify(pendingQueue));
+  toast('Sem conexão com Sheets — salvo localmente.', '📴');
+  return false;
+}
+
+// ===================== UTILS =====================
+function save() {
+  localStorage.setItem('fb_rats', JSON.stringify(rats));
+  localStorage.setItem('fb_checkins', JSON.stringify(checkins));
+  localStorage.setItem('fb_active_checkin', JSON.stringify(activeCheckin));
+  localStorage.setItem('fb_rat_counter', ratCounter);
+}
+
+function configurarURL() {
+  const input = document.getElementById('config-url-input');
+  if (input) input.value = localStorage.getItem('fb_sheet_url') || '';
+  document.getElementById('config-url-status').textContent = '';
+  document.getElementById('config-modal').classList.add('open');
+  setTimeout(() => { if (input) input.focus(); }, 200);
+}
+
+async function salvarConfigURL() {
+  const input = document.getElementById('config-url-input');
+  const statusEl = document.getElementById('config-url-status');
+  const url = (input.value || '').trim();
+
+  if (!url) {
+    statusEl.innerHTML = '<span style="color:var(--red)">⚠ Cole a URL antes de salvar.</span>';
+    return;
+  }
+  if (!url.includes('script.google.com') || !url.includes('/exec')) {
+    statusEl.innerHTML = '<span style="color:var(--yellow)">⚠ URL inválida. Deve conter script.google.com e terminar em /exec</span>';
+    return;
+  }
+
+  localStorage.setItem('fb_sheet_url', url);
+  statusEl.innerHTML = '<span style="color:var(--green)">✅ URL salva! Testando conexão...</span>';
+
+  // Reler SHEET_URL sem recarregar a página
+  window._SHEET_URL_LIVE = url;
+
+  const r = await sheetGetJSONP('ping', {}, url);
+  if (r && r.ok) {
+    statusEl.innerHTML = '<span style="color:var(--green)">✅ Conectado com sucesso! ' + (r.msg || '') + '</span>';
+    sheetOnline = true;
+    updateSheetStatus(true);
+    atualizarPainelConfig();
+    setTimeout(() => {
+      document.getElementById('config-modal').classList.remove('open');
+      syncFromSheet();
+      flushQueue();
+    }, 1500);
+  } else {
+    statusEl.innerHTML = '<span style="color:var(--red)">❌ Não foi possível conectar. Verifique se o Apps Script está publicado corretamente (Executar como: Eu | Acesso: Qualquer pessoa).</span>';
+    sheetOnline = false;
+    updateSheetStatus(false);
+  }
+}
+
+function limparURL() {
+  localStorage.removeItem('fb_sheet_url');
+  window._SHEET_URL_LIVE = '';
+  document.getElementById('config-url-input').value = '';
+  document.getElementById('config-url-status').innerHTML = '<span style="color:var(--yellow)">URL removida.</span>';
+  sheetOnline = false;
+  updateSheetStatus(false);
+  atualizarPainelConfig();
+}
+
+function toast(msg, icon = '✅') {
+  document.getElementById('toast-icon').textContent = icon;
+  document.getElementById('toast-msg').textContent = msg;
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+function fmtTime(ts) {
+  return new Date(ts).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+}
+function fmtDate(ts) {
+  return new Date(ts).toLocaleDateString('pt-BR');
+}
+function calcDuration(start, end) {
+  const diff = end - start;
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  return `${h}h${m.toString().padStart(2,'0')}m`;
+}
+
+// ===================== CLOCK =====================
+function updateClock() {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('pt-BR');
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ===================== TABS =====================
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  event.target.classList.add('active');
+  if (name === 'dashboard')      renderDashboard();
+  if (name === 'chamados')       { renderChamados(); populateFiltroTecChamado(); }
+  if (name === 'historico')      renderHistorico();
+  if (name === 'rat')            { initRATForm(); setTimeout(initAssinatura, 100); }
+  if (name === 'relatorio')      { initRelatorioSelects(); gerarRelatorio(); }
+  if (name === 'notificacoes')   verificarAlertas();
+  if (name === 'cadastros')      { renderTabelaTecnicos(); renderTabelaClientes(); }
+}
+
+function populateFiltroTecChamado() {
+  const sel = document.getElementById('filtro-tec-chamado');
+  if (!sel) return;
+  const val = sel.value;
+  sel.innerHTML = '<option value="">Todos os técnicos</option>' +
+    tecnicos.filter(t => t.status === 'ativo')
+      .map(t => `<option value="${t.nome}">${t.nome}</option>`).join('');
+  sel.value = val;
+}
+
+function initRelatorioSelects() {
+  const sel = document.getElementById('rel-tecnico');
+  if (!sel) return;
+  const val = sel.value;
+  sel.innerHTML = '<option value="">Todos</option>' +
+    tecnicos.filter(t => t.status === 'ativo')
+      .map(t => `<option value="${t.nome}">${t.nome}</option>`).join('');
+  sel.value = val;
+  // Mês padrão = mês atual
+  const mes = document.getElementById('rel-mes');
+  if (mes && !mes.value) mes.value = new Date().toISOString().substring(0,7);
+}
+
+// ===================== GPS =====================
+function getGPS() {
+  document.getElementById('gps-status').textContent = 'Obtendo localização...';
+  if (!navigator.geolocation) {
+    document.getElementById('gps-status').textContent = 'GPS não disponível neste browser.';
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(pos => {
+    currentGPS = { lat: pos.coords.latitude, lng: pos.coords.longitude, acc: pos.coords.accuracy };
+    document.getElementById('gps-status').textContent = `Precisão: ±${Math.round(currentGPS.acc)}m`;
+    document.getElementById('gps-coords').textContent =
+      `${currentGPS.lat.toFixed(6)}, ${currentGPS.lng.toFixed(6)}`;
+    toast('Localização obtida com sucesso!', '📍');
+  }, err => {
+    document.getElementById('gps-status').textContent = 'Erro ao obter GPS. Verifique permissões.';
+    toast('Falha ao obter GPS.', '⚠️');
+  }, { enableHighAccuracy: true, timeout: 10000 });
+}
+
+// ===================== CHECK-IN / OUT =====================
+async function doCheckin() {
+  const tecnico = document.getElementById('ci-tecnico').value;
+  const cliente = document.getElementById('ci-cliente').value;
+  const endereco = document.getElementById('ci-endereco').value;
+  const tipo = document.getElementById('ci-tipo').value;
+  if (!tecnico || !cliente) { toast('Preencha técnico e cliente!', '⚠️'); return; }
+
+  getGPS();
+  activeCheckin = {
+    id: Date.now(),
+    tecnico, cliente, endereco, tipo,
+    inicio: Date.now(),
+    gps_entrada: currentGPS,
+  };
+  save();
+  updateCheckinUI();
+  addTimeline('checkin', tecnico, cliente);
+
+  // Enviar ao Sheets
+  const r = await sendOrQueue('salvarCheckin', activeCheckin);
+  toast(`Check-in registrado — ${tecnico}${r ? ' ☁' : ' 📴'}`, '📍');
+}
+
+async function doCheckout() {
+  if (!activeCheckin) return;
+  getGPS();
+  activeCheckin.fim = Date.now();
+  activeCheckin.gps_saida = currentGPS;
+  checkins.push({ ...activeCheckin });
+  addTimeline('checkout', activeCheckin.tecnico, activeCheckin.cliente);
+
+  // Enviar checkout ao Sheets
+  const r = await sendOrQueue('checkout', {
+    id: activeCheckin.id,
+    fim: activeCheckin.fim,
+    inicio: activeCheckin.inicio,
+    gps_saida: currentGPS,
+  });
+
+  toast(`Check-out registrado — ${activeCheckin.tecnico} (${calcDuration(activeCheckin.inicio, activeCheckin.fim)})${r ? ' ☁' : ' 📴'}`, '✅');
+  activeCheckin = null;
+  save();
+  updateCheckinUI();
+  renderCheckinTable();
+  renderDashboard();
+}
+
+function updateCheckinUI() {
+  const dot = document.getElementById('status-dot');
+  const txt = document.getElementById('status-text');
+  const timer = document.getElementById('status-timer');
+  const btnIn = document.getElementById('btn-checkin');
+  const btnOut = document.getElementById('btn-checkout');
+
+  if (activeCheckin) {
+    dot.className = 'in';
+    txt.textContent = `Em campo: ${activeCheckin.tecnico} → ${activeCheckin.cliente}`;
+    btnIn.disabled = true;
+    btnOut.disabled = false;
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      const d = Date.now() - activeCheckin.inicio;
+      const h = Math.floor(d / 3600000);
+      const m = Math.floor((d % 3600000) / 60000);
+      const s = Math.floor((d % 60000) / 1000);
+      timer.textContent = `Duração: ${h}h${String(m).padStart(2,'0')}m${String(s).padStart(2,'0')}s`;
+    }, 1000);
+  } else {
+    dot.className = '';
+    txt.textContent = 'Nenhuma visita ativa';
+    timer.textContent = '';
+    btnIn.disabled = false;
+    btnOut.disabled = true;
+    clearInterval(timerInterval);
+  }
+}
+
+function renderCheckinTable() {
+  const today = new Date().toDateString();
+  const todayCI = checkins.filter(c => new Date(c.inicio).toDateString() === today);
+  const tbody = document.getElementById('checkin-table-body');
+  if (!todayCI.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:20px">Nenhum registro hoje</td></tr>';
+    return;
+  }
+  tbody.innerHTML = todayCI.map(c =>
+    `<tr>
+      <td><strong>${c.tecnico}</strong></td>
+      <td>${c.cliente}</td>
+      <td><span class="badge badge-green">${fmtTime(c.inicio)}</span></td>
+      <td><span class="badge badge-red">${c.fim ? fmtTime(c.fim) : '—'}</span></td>
+      <td>${c.fim ? calcDuration(c.inicio, c.fim) : '<span class="badge badge-yellow">Em campo</span>'}</td>
+    </tr>`
+  ).join('');
+}
+
+// ===================== DASHBOARD =====================
+let timelineItems = [];
+
+function addTimeline(type, tecnico, cliente) {
+  timelineItems.unshift({ type, tecnico, cliente, time: Date.now() });
+  if (timelineItems.length > 10) timelineItems.pop();
+  renderTimeline();
+}
+
+function renderTimeline() {
+  const feed = document.getElementById('timeline-feed');
+  if (!timelineItems.length) { feed.innerHTML = '<div class="tl-item"><div class="tl-time">Aguardando atividade...</div></div>'; return; }
+  feed.innerHTML = timelineItems.map(i =>
+    `<div class="tl-item ${i.type}">
+      <div class="tl-time">${fmtTime(i.time)}</div>
+      <div class="tl-tech">${i.tecnico}</div>
+      <div class="tl-desc">${i.type === 'checkin' ? '📍 Check-in' : '✅ Check-out'} → ${i.cliente}</div>
+    </div>`
+  ).join('');
+}
+
+function renderDashboard() {
+  const today = new Date().toDateString();
+  const todayRATs = rats.filter(r => new Date(r.data).toDateString() === today);
+  document.getElementById('dash-total').textContent = todayRATs.length;
+  document.getElementById('dash-concluidas').textContent = todayRATs.filter(r => r.status === 'concluida').length;
+  document.getElementById('dash-pendentes').textContent = todayRATs.filter(r => r.status === 'pendente').length;
+
+  const todayCI = checkins.filter(c => new Date(c.inicio).toDateString() === today);
+  const emCampo = activeCheckin ? 1 : 0;
+  document.getElementById('dash-em-campo').textContent = emCampo;
+  const chamAbertos = chamados.filter(c => c.status === 'aberto' || c.status === 'agendado').length;
+  const elCA = document.getElementById('dash-chamados-abertos');
+  if (elCA) elCA.textContent = chamAbertos;
+
+  // Tech status
+  const techList = document.getElementById('tech-status-list');
+  techList.innerHTML = tecnicos.map(t => {
+    const ac = activeCheckin && activeCheckin.tecnico === t.nome;
+    const last = [...checkins].reverse().find(c => c.tecnico === t.nome);
+    return `
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
+        <div style="width:36px;height:36px;border-radius:50%;background:rgba(0,212,255,.15);border:1px solid var(--accent);
+          display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:var(--accent);flex-shrink:0">
+          ${t.avatar}
+        </div>
+        <div style="flex:1">
+          <div style="font-weight:600;font-size:14px">${t.nome}</div>
+          <div style="font-size:11px;color:var(--label)">${ac ? '📍 '+activeCheckin.cliente : (last && new Date(last.inicio).toDateString()===today ? '✅ '+last.cliente : 'Sem registro hoje')}</div>
+        </div>
+        <span class="badge ${ac ? 'badge-green' : 'badge-yellow'}">${ac ? 'Em campo' : 'Disponível'}</span>
+      </div>`;
+  }).join('');
+}
+
+// ===================== RAT =====================
+function initRATForm() {
+  const num = `FB-RAT-${new Date().getFullYear()}-${String(ratCounter).padStart(4,'0')}`;
+  document.getElementById('rat-num').value  = num;
+  document.getElementById('rat-data').value = new Date().toISOString().split('T')[0];
+  renderPecas([{ desc: '', qtd: 1, un: 'un' }]);
+  // Limpar fotos e assinatura
+  fotosRAT = [];
+  renderFotos();
+  limparAssinatura();
+  initAssinatura();
+}
+
+let pecas = [];
+function addPeca() {
+  pecas.push({ desc: '', qtd: 1, un: 'un' });
+  renderPecas(pecas);
+}
+
+function renderPecas(list) {
+  pecas = list;
+  const el = document.getElementById('pecas-list');
+  el.innerHTML = pecas.map((p, i) =>
+    `<div class="part-row">
+      <input type="text" placeholder="Descrição da peça" value="${p.desc}" oninput="pecas[${i}].desc=this.value">
+      <input type="number" min="1" value="${p.qtd}" placeholder="Qtd" oninput="pecas[${i}].qtd=this.value">
+      <input type="text" value="${p.un}" placeholder="Un" oninput="pecas[${i}].un=this.value">
+      <button class="btn btn-danger btn-sm" onclick="removePeca(${i})">✕</button>
+    </div>`
+  ).join('');
+}
+
+function removePeca(i) {
+  pecas.splice(i, 1);
+  renderPecas(pecas);
+}
+
+function getRATData() {
+  return {
+    num: document.getElementById('rat-num').value,
+    tecnico: document.getElementById('rat-tecnico').value,
+    data: document.getElementById('rat-data').value,
+    cliente: document.getElementById('rat-cliente').value,
+    solicitante: document.getElementById('rat-solicitante').value,
+    emailCliente: document.getElementById('rat-email-cliente').value,
+    tel: document.getElementById('rat-tel').value,
+    end: document.getElementById('rat-end').value,
+    entrada: document.getElementById('rat-entrada').value,
+    saida: document.getElementById('rat-saida').value,
+    tipo: document.getElementById('rat-tipo').value,
+    problema: document.getElementById('rat-problema').value,
+    solucao: document.getElementById('rat-solucao').value,
+    obs: document.getElementById('rat-obs').value,
+    emailSede: document.getElementById('rat-email-sede').value,
+    pecas:       pecas.filter(p => p.desc),
+    fotos:       fotosRAT.map(f => f.base64),
+    assinatura:  getAssinaturaBase64(),
+    status:      'concluida',
+    createdAt:   Date.now(),
+  };
+}
+
+function buildRATHtml(d) {
+  const duracaoMin = d.entrada && d.saida ?
+    (() => {
+      const [h1,m1] = d.entrada.split(':').map(Number);
+      const [h2,m2] = d.saida.split(':').map(Number);
+      const diff = (h2*60+m2) - (h1*60+m1);
+      return `${Math.floor(diff/60)}h${String(diff%60).padStart(2,'0')}m`;
+    })() : '—';
+
+  return `
+    <div id="rat-preview">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+        <div>
+          <h2>FB Informática</h2>
+          <div style="font-size:11px;color:#555">CNPJ: XX.XXX.XXX/0001-XX · contato@fbinformatica.com.br</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:20px;font-weight:700;color:#003366">${d.num}</div>
+          <div style="font-size:11px;color:#555">Relatório de Atendimento Técnico</div>
+        </div>
+      </div>
+
+      <div class="rat-section">Dados do Atendimento</div>
+      <div class="rat-row">
+        <div class="rat-field"><strong>Técnico</strong><span>${d.tecnico || '—'}</span></div>
+        <div class="rat-field"><strong>Data</strong><span>${d.data ? new Date(d.data+'T12:00').toLocaleDateString('pt-BR') : '—'}</span></div>
+        <div class="rat-field"><strong>Tipo</strong><span>${d.tipo || '—'}</span></div>
+      </div>
+      <div class="rat-row">
+        <div class="rat-field"><strong>Entrada</strong><span>${d.entrada || '—'}</span></div>
+        <div class="rat-field"><strong>Saída</strong><span>${d.saida || '—'}</span></div>
+        <div class="rat-field"><strong>Duração</strong><span>${duracaoMin}</span></div>
+      </div>
+
+      <div class="rat-section">Dados do Cliente</div>
+      <div class="rat-row">
+        <div class="rat-field"><strong>Empresa / Cliente</strong><span>${d.cliente || '—'}</span></div>
+        <div class="rat-field"><strong>Solicitante</strong><span>${d.solicitante || '—'}</span></div>
+      </div>
+      <div class="rat-row">
+        <div class="rat-field"><strong>Endereço</strong><span>${d.end || '—'}</span></div>
+        <div class="rat-field"><strong>Telefone</strong><span>${d.tel || '—'}</span></div>
+      </div>
+
+      <div class="rat-section">Problema Relatado</div>
+      <div class="rat-box">${d.problema || '—'}</div>
+
+      <div class="rat-section">Solução Implantada</div>
+      <div class="rat-box">${d.solucao || '—'}</div>
+
+      ${d.obs ? `<div class="rat-section">Observações / Pendências</div><div class="rat-box">${d.obs}</div>` : ''}
+
+      ${d.pecas.length ? `
+        <div class="rat-section">Peças / Materiais Utilizados</div>
+        <div class="rat-pecas">
+          <table>
+            <thead><tr><th>#</th><th>Descrição</th><th>Qtd</th><th>Un</th></tr></thead>
+            <tbody>
+              ${d.pecas.map((p,i) => `<tr><td>${i+1}</td><td>${p.desc}</td><td>${p.qtd}</td><td>${p.un}</td></tr>`).join('')}
+            </tbody>
+          </table>
+        </div>` : ''}
+
+      ${d.fotos && d.fotos.length ? `
+        <div class="rat-section">Fotos de Evidência</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+          ${d.fotos.map((f,i) => `<img src="${f}" style="width:120px;height:90px;object-fit:cover;border-radius:4px;border:1px solid #ddd">`).join('')}
+        </div>` : ''}
+
+      <div class="rat-sign" style="margin-top:32px">
+        <div class="rat-sign-line">Assinatura do Técnico<br><strong>${d.tecnico || ''}</strong></div>
+        <div class="rat-sign-line">
+          ${d.assinatura
+            ? `<img src="${d.assinatura}" style="height:60px;max-width:100%;object-fit:contain"><br>Assinatura do Cliente<br><strong>${d.solicitante || ''}</strong>`
+            : `Assinatura do Cliente<br><strong>${d.solicitante || ''}</strong>`}
+        </div>
+        <div class="rat-sign-line">Visto / Carimbo</div>
+      </div>
+
+      <div style="text-align:center;margin-top:20px;font-size:10px;color:#999;border-top:1px solid #eee;padding-top:10px">
+        Documento gerado em ${new Date().toLocaleString('pt-BR')} · FB Informática · Sistema de Controle de Visitas
+      </div>
+    </div>`;
+}
+
+function gerarRAT() {
+  const d = getRATData();
+  if (!d.tecnico || !d.cliente) { toast('Preencha técnico e cliente!', '⚠️'); return; }
+  document.getElementById('rat-preview').outerHTML = buildRATHtml(d);
+  document.getElementById('rat-modal-content').innerHTML = buildRATHtml(d);
+  document.getElementById('rat-modal').classList.add('open');
+}
+
+async function salvarRAT() {
+  const d = getRATData();
+  if (!d.tecnico || !d.cliente) { toast('Preencha técnico e cliente!', '⚠️'); return; }
+
+  // Adiciona GPS atual
+  d.gps = currentGPS;
+
+  // Salvar local
+  rats.push(d);
+  ratCounter++;
+  save();
+  renderDashboard();
+
+  // Enviar ao Sheets (inclui disparo de e-mails pelo Apps Script)
+  const r = await sendOrQueue('salvarRAT', d);
+  if (r) {
+    toast(`RAT ${d.num} salva no Sheets ☁ — e-mails enviados!`, '💾');
+  } else {
+    toast(`RAT ${d.num} salva localmente 📴 — será sincronizada.`, '💾');
+  }
+  vincularChamadoRAT(d.num);
+  initRATForm();
+  renderHistorico();
+  atualizarBadgeChamados();
+}
+
+function enviarWhatsApp() {
+  const d = getRATData();
+  const msg = encodeURIComponent(
+    `*RAT ${d.num} - FB Informática*\n` +
+    `━━━━━━━━━━━━━━━\n` +
+    `📅 Data: ${d.data ? new Date(d.data+'T12:00').toLocaleDateString('pt-BR') : '—'}\n` +
+    `👷 Técnico: ${d.tecnico || '—'}\n` +
+    `🏢 Cliente: ${d.cliente || '—'}\n` +
+    `👤 Solicitante: ${d.solicitante || '—'}\n` +
+    `🕐 Entrada: ${d.entrada || '—'} | Saída: ${d.saida || '—'}\n` +
+    `🔧 Tipo: ${d.tipo || '—'}\n` +
+    `━━━━━━━━━━━━━━━\n` +
+    `📌 *Problema:* ${d.problema || '—'}\n` +
+    `✅ *Solução:* ${d.solucao || '—'}\n` +
+    `${d.obs ? '⚠️ *Obs:* ' + d.obs + '\n' : ''}` +
+    `${d.pecas.length ? '🔩 *Peças:* ' + d.pecas.map(p => `${p.qtd}x ${p.desc}`).join(', ') + '\n' : ''}` +
+    `━━━━━━━━━━━━━━━\n` +
+    `_FB Informática - Soluções em TI & CFTV_`
+  );
+  const phone = prompt('Número do WhatsApp (com DDI, ex: 5511999999999):');
+  if (phone) window.open(`https://wa.me/${phone.replace(/\D/g,'')}?text=${msg}`, '_blank');
+}
+
+function imprimirRAT() {
+  const d = getRATData();
+  const html = buildRATHtml(d);
+  const win = window.open('', '_blank');
+  win.document.write(`<html><head><title>RAT ${d.num}</title>
+    <style>
+      body{font-family:'Segoe UI',sans-serif;padding:24px;color:#111}
+      h2{color:#003366;border-bottom:2px solid #003366;padding-bottom:8px}
+      .rat-row{display:flex;gap:16px;margin-bottom:10px}
+      .rat-field{flex:1}.rat-field strong{display:block;font-size:10px;text-transform:uppercase;color:#666}
+      .rat-section{margin:16px 0 8px;font-weight:700;font-size:12px;text-transform:uppercase;color:#003366;border-left:3px solid #003366;padding-left:8px}
+      .rat-box{background:#f5f7fa;border:1px solid #dde;border-radius:4px;padding:10px 12px;white-space:pre-wrap}
+      .rat-sign{display:flex;gap:24px;margin-top:32px}
+      .rat-sign-line{flex:1;border-top:1px solid #aaa;padding-top:6px;font-size:11px;color:#666;text-align:center}
+      table{width:100%;border-collapse:collapse}th,td{padding:6px 10px;border:1px solid #dde;text-align:left}th{background:#f0f4f8}
+      @media print{body{padding:0}}
+    </style></head><body>${html}<\x73cript>window.print();<\/\x73cript></body></html>`);
+  win.document.close();
+}
+
+function closeModal() {
+  document.getElementById('rat-modal').classList.remove('open');
+}
+
+// ===================== ROTAS =====================
+let stops = [];
+
+function addStop() {
+  const i = stops.length;
+  stops.push('');
+  renderStops();
+}
+
+function renderStops() {
+  const el = document.getElementById('rota-stops');
+  el.innerHTML = stops.map((s, i) =>
+    `<div class="form-group" style="display:flex;gap:8px;align-items:center">
+      <div style="width:22px;height:22px;border-radius:50%;background:rgba(0,212,255,.15);border:1px solid var(--accent);
+        display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--accent);flex-shrink:0">${i+1}</div>
+      <input type="text" placeholder="Endereço da parada ${i+1}" value="${s}"
+        oninput="stops[${i}]=this.value" style="flex:1">
+      <button class="btn btn-danger btn-sm" onclick="stops.splice(${i},1);renderStops()">✕</button>
+    </div>`
+  ).join('');
+}
+
+function otimizarRota() {
+  const tecnico = document.getElementById('rota-tecnico').value;
+  const origem = document.getElementById('rota-origem').value;
+  if (!tecnico || !origem || !stops.length) {
+    toast('Preencha técnico, origem e pelo menos uma parada.', '⚠️');
+    return;
+  }
+  const validas = stops.filter(s => s.trim());
+  if (!validas.length) { toast('Adicione endereços nas paradas!', '⚠️'); return; }
+
+  // Simulate optimization (random shuffle with distances)
+  const shuffled = [...validas].sort(() => Math.random() - 0.5);
+  const result = document.getElementById('rota-result');
+  result.innerHTML = `
+    <div style="margin-bottom:12px;display:flex;align-items:center;gap:8px">
+      <span class="badge badge-green">✓ Rota Otimizada</span>
+      <span style="font-size:12px;color:var(--label)">${tecnico}</span>
+    </div>
+    <div class="route-card">
+      <div class="route-num">O</div>
+      <div class="route-info">
+        <div class="route-name">Ponto de Partida</div>
+        <div class="route-addr">${origem}</div>
+      </div>
+    </div>
+    ${shuffled.map((s, i) => `
+      <div class="route-card">
+        <div class="route-num">${i+1}</div>
+        <div class="route-info">
+          <div class="route-name">Parada ${i+1}</div>
+          <div class="route-addr">${s}</div>
+        </div>
+        <div class="route-dist">~${Math.floor(Math.random()*15+2)} km</div>
+      </div>`).join('')}
+  `;
+
+  // Google Maps link
+  const all = [origem, ...shuffled].map(a => encodeURIComponent(a));
+  const mapsUrl = `https://www.google.com/maps/dir/${all.join('/')}`;
+  document.getElementById('maps-link').innerHTML =
+    `<a href="${mapsUrl}" target="_blank" class="btn btn-primary">🗺️ Abrir no Google Maps</a>
+     <div style="font-size:11px;color:var(--muted);margin-top:8px">A rota será aberta com todas as paradas no Google Maps.</div>`;
+
+  toast('Rota otimizada com sucesso!', '🧭');
+}
+
+// ===================== HISTÓRICO =====================
+function renderHistorico() {
+  const filtTecnico = document.getElementById('hist-tecnico').value;
+  const filtDe = document.getElementById('hist-de').value;
+  const filtAte = document.getElementById('hist-ate').value;
+  const filtStatus = document.getElementById('hist-status').value;
+
+  let filtered = [...rats];
+  if (filtTecnico) filtered = filtered.filter(r => r.tecnico === filtTecnico);
+  if (filtDe) filtered = filtered.filter(r => r.data >= filtDe);
+  if (filtAte) filtered = filtered.filter(r => r.data <= filtAte);
+  if (filtStatus) filtered = filtered.filter(r => r.status === filtStatus);
+
+  const tbody = document.getElementById('hist-table');
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="9" style="color:var(--muted);text-align:center;padding:24px">Nenhuma RAT encontrada.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = filtered.map(r =>
+    `<tr>
+      <td><span style="font-family:\'IBM Plex Mono\',monospace;font-size:12px;color:var(--accent)">${r.num}</span></td>
+      <td>${r.data ? new Date(r.data+'T12:00').toLocaleDateString('pt-BR') : '—'}</td>
+      <td><strong>${r.tecnico}</strong></td>
+      <td>${r.cliente}</td>
+      <td style="font-size:12px">${r.tipo}</td>
+      <td>${r.entrada || '—'}</td>
+      <td>${r.saida || '—'}</td>
+      <td><span class="badge ${r.status === 'concluida' ? 'badge-green' : 'badge-yellow'}">${r.status === 'concluida' ? 'Concluída' : 'Pendente'}</span></td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="viewRAT('${r.num}')">👁</button>
+        <button class="btn btn-ghost btn-sm" onclick="editarRAT('${r.num}')">✏️</button>
+        <button class="btn btn-warn btn-sm" onclick="shareRATHist('${r.num}')">📱</button>
+      </td>
+    </tr>`
+  ).join('');
+}
+
+function viewRAT(num) {
+  const r = rats.find(r => r.num === num);
+  if (!r) return;
+  document.getElementById('rat-modal-content').innerHTML = buildRATHtml(r);
+  document.getElementById('rat-modal').classList.add('open');
+}
+
+function shareRATHist(num) {
+  const r = rats.find(r => r.num === num);
+  if (!r) return;
+  const msg = encodeURIComponent(
+    `*RAT ${r.num} - FB Informática*\n👷 ${r.tecnico} | 🏢 ${r.cliente}\n📅 ${r.data}\n✅ Atendimento: ${r.tipo}`
+  );
+  const phone = prompt('WhatsApp (com DDI):');
+  if (phone) window.open(`https://wa.me/${phone.replace(/\D/g,'')}?text=${msg}`, '_blank');
+}
+
+function exportarCSV() {
+  const headers = ['Nº RAT','Data','Técnico','Cliente','Solicitante','Tipo','Entrada','Saída','Status'];
+  const rows = rats.map(r =>
+    [r.num, r.data, r.tecnico, r.cliente, r.solicitante, r.tipo, r.entrada, r.saida, r.status]
+    .map(v => `"${(v||'').replace(/"/g,'""')}"`)
+  );
+  const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(["\ufeff"+csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = `FB_RATs_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  toast('CSV exportado!', '⬇️');
+}
+
+// ===================== CADASTROS =====================
+
+let tecEditId = null;
+let cliEditId = null;
+
+function showSubTab(tab) {
+  document.getElementById('sub-view-tecnicos').style.display = tab === 'tecnicos' ? '' : 'none';
+  document.getElementById('sub-view-clientes').style.display = tab === 'clientes'  ? '' : 'none';
+  document.getElementById('sub-tab-tecnicos').classList.toggle('active', tab === 'tecnicos');
+  document.getElementById('sub-tab-clientes').classList.toggle('active', tab === 'clientes');
+  if (tab === 'tecnicos') renderTabelaTecnicos();
+  if (tab === 'clientes') renderTabelaClientes();
+}
+
+// ---- Preencher selects de técnico em todo o app ----
+function populateSelects() {
+  const ativos = tecnicos.filter(t => t.status === 'ativo');
+  // selects que precisam de "— Selecionar —"
+  ['ci-tecnico','rat-tecnico','rota-tecnico'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const val = el.value;
+    el.innerHTML = '<option value="">— Selecionar —</option>' +
+      ativos.map(t => `<option value="${t.nome}">${t.nome}</option>`).join('');
+    el.value = val;
+  });
+  // select de histórico (tem "Todos")
+  const hist = document.getElementById('hist-tecnico');
+  if (hist) {
+    const val = hist.value;
+    hist.innerHTML = '<option value="">Todos</option>' +
+      ativos.map(t => `<option value="${t.nome}">${t.nome}</option>`).join('');
+    hist.value = val;
+  }
+  // select de cliente na RAT
+  populateClienteSelect();
+}
+
+function populateClienteSelect() {
+  // Adiciona datalist para autocomplete de cliente na RAT
+  let dl = document.getElementById('dl-clientes');
+  if (!dl) {
+    dl = document.createElement('datalist');
+    dl.id = 'dl-clientes';
+    document.body.appendChild(dl);
+    const ratCli = document.getElementById('rat-cliente');
+    if (ratCli) ratCli.setAttribute('list', 'dl-clientes');
+    const ciCli = document.getElementById('ci-cliente');
+    if (ciCli) ciCli.setAttribute('list', 'dl-clientes');
+  }
+  dl.innerHTML = clientes.map(c =>
+    `<option value="${c.nome}">${c.nome} — ${c.cidade || ''}</option>`
+  ).join('');
+
+  // Datalist para endereço
+  let dlEnd = document.getElementById('dl-enderecos');
+  if (!dlEnd) {
+    dlEnd = document.createElement('datalist');
+    dlEnd.id = 'dl-enderecos';
+    document.body.appendChild(dlEnd);
+    const ratEnd = document.getElementById('rat-end');
+    if (ratEnd) ratEnd.setAttribute('list', 'dl-enderecos');
+    const ciEnd = document.getElementById('ci-endereco');
+    if (ciEnd) ciEnd.setAttribute('list', 'dl-enderecos');
+  }
+  dlEnd.innerHTML = clientes.map(c =>
+    `<option value="${[c.end, c.cidade, c.estado].filter(Boolean).join(', ')}">${c.nome}</option>`
+  ).join('');
+}
+
+// Quando usuário digita cliente na RAT, preenche campos automaticamente
+function autoPreencherCliente(campo) {
+  const nomeDigitado = document.getElementById(campo)?.value?.trim();
+  if (!nomeDigitado) return;
+  const cli = clientes.find(c => c.nome.toLowerCase() === nomeDigitado.toLowerCase());
+  if (!cli) return;
+  if (campo === 'rat-cliente') {
+    if (document.getElementById('rat-solicitante') && !document.getElementById('rat-solicitante').value)
+      document.getElementById('rat-solicitante').value = cli.contato || '';
+    if (document.getElementById('rat-email-cliente') && !document.getElementById('rat-email-cliente').value)
+      document.getElementById('rat-email-cliente').value = cli.email || '';
+    if (document.getElementById('rat-tel') && !document.getElementById('rat-tel').value)
+      document.getElementById('rat-tel').value = cli.tel || '';
+    if (document.getElementById('rat-end') && !document.getElementById('rat-end').value)
+      document.getElementById('rat-end').value = [cli.end, cli.cidade, cli.estado].filter(Boolean).join(', ');
+  }
+  if (campo === 'ci-cliente') {
+    if (document.getElementById('ci-endereco') && !document.getElementById('ci-endereco').value)
+      document.getElementById('ci-endereco').value = [cli.end, cli.cidade, cli.estado].filter(Boolean).join(', ');
+  }
+}
+
+// ---- TÉCNICOS CRUD ----
+function salvarTecnico() {
+  const nome = document.getElementById('tec-nome').value.trim();
+  if (!nome) { toast('Informe o nome do técnico!', '⚠️'); return; }
+
+  const obj = {
+    id:     tecEditId || Date.now(),
+    nome,
+    tel:    document.getElementById('tec-tel').value.trim(),
+    email:  document.getElementById('tec-email').value.trim(),
+    esp:    document.getElementById('tec-esp').value,
+    status: document.getElementById('tec-status').value,
+    obs:    document.getElementById('tec-obs').value.trim(),
+  };
+
+  if (tecEditId) {
+    const idx = tecnicos.findIndex(t => t.id === tecEditId);
+    if (idx !== -1) tecnicos[idx] = obj;
+    tecEditId = null;
+  } else {
+    if (tecnicos.find(t => t.nome.toLowerCase() === nome.toLowerCase())) {
+      toast('Já existe um técnico com este nome!', '⚠️'); return;
+    }
+    tecnicos.push(obj);
+  }
+
+  localStorage.setItem('fb_tecnicos', JSON.stringify(tecnicos));
+  sendOrQueue('salvarTecnico', obj);
+  populateSelects();
+  renderTabelaTecnicos();
+  limparFormTecnico();
+  toast(`Técnico ${nome} salvo!`, '👷');
+}
+
+function editarTecnico(id) {
+  const t = tecnicos.find(t => t.id === id);
+  if (!t) return;
+  tecEditId = id;
+  document.getElementById('tec-nome').value   = t.nome;
+  document.getElementById('tec-tel').value    = t.tel;
+  document.getElementById('tec-email').value  = t.email;
+  document.getElementById('tec-esp').value    = t.esp;
+  document.getElementById('tec-status').value = t.status;
+  document.getElementById('tec-obs').value    = t.obs;
+  document.getElementById('tec-nome').focus();
+  toast('Editando técnico — faça as alterações e clique em Salvar.', '✏️');
+}
+
+function excluirTecnico(id) {
+  const t = tecnicos.find(t => t.id === id);
+  if (!t) return;
+  if (!confirm(`Excluir técnico "${t.nome}"?`)) return;
+  tecnicos = tecnicos.filter(t => t.id !== id);
+  localStorage.setItem('fb_tecnicos', JSON.stringify(tecnicos));
+  populateSelects();
+  renderTabelaTecnicos();
+  toast('Técnico removido.', '🗑️');
+}
+
+function limparFormTecnico() {
+  tecEditId = null;
+  ['tec-nome','tec-tel','tec-email','tec-obs'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const esp = document.getElementById('tec-esp');
+  if (esp) esp.selectedIndex = 0;
+  const st = document.getElementById('tec-status');
+  if (st) st.value = 'ativo';
+}
+
+function renderTabelaTecnicos() {
+  const busca = (document.getElementById('busca-tecnico')?.value || '').toLowerCase();
+  const tbody = document.getElementById('tbody-tecnicos');
+  if (!tbody) return;
+  const filtrado = tecnicos.filter(t =>
+    t.nome.toLowerCase().includes(busca) ||
+    (t.esp||'').toLowerCase().includes(busca)
+  );
+  if (!filtrado.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:20px">Nenhum técnico cadastrado.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = filtrado.map(t => `
+    <tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:30px;height:30px;border-radius:50%;background:rgba(0,212,255,.15);border:1px solid var(--accent);
+            display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--accent);flex-shrink:0">
+            ${t.nome.split(' ').map(w=>w[0]).slice(0,2).join('')}
+          </div>
+          <div>
+            <div style="font-weight:600">${t.nome}</div>
+            <div style="font-size:11px;color:var(--label)">${t.email||'—'}</div>
+          </div>
+        </div>
+      </td>
+      <td style="font-size:12px">${t.esp||'—'}</td>
+      <td style="font-size:12px">${t.tel||'—'}</td>
+      <td><span class="badge ${t.status==='ativo'?'badge-green':'badge-red'}">${t.status}</span></td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="editarTecnico(${t.id})">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="excluirTecnico(${t.id})">🗑</button>
+      </td>
+    </tr>`).join('');
+}
+
+// ---- CLIENTES CRUD ----
+function salvarCliente() {
+  const nome = document.getElementById('cli-nome').value.trim();
+  if (!nome) { toast('Informe o nome do cliente!', '⚠️'); return; }
+
+  const obj = {
+    id:        cliEditId || Date.now(),
+    nome,
+    doc:       document.getElementById('cli-doc').value.trim(),
+    tel:       document.getElementById('cli-tel').value.trim(),
+    email:     document.getElementById('cli-email').value.trim(),
+    end:       document.getElementById('cli-end').value.trim(),
+    cidade:    document.getElementById('cli-cidade').value.trim(),
+    estado:    document.getElementById('cli-estado').value.trim(),
+    contato:   document.getElementById('cli-contato').value.trim(),
+    contrato:  document.getElementById('cli-contrato').value,
+    obs:       document.getElementById('cli-obs').value.trim(),
+  };
+
+  if (cliEditId) {
+    const idx = clientes.findIndex(c => c.id === cliEditId);
+    if (idx !== -1) clientes[idx] = obj;
+    cliEditId = null;
+  } else {
+    if (clientes.find(c => c.nome.toLowerCase() === nome.toLowerCase())) {
+      toast('Já existe um cliente com este nome!', '⚠️'); return;
+    }
+    clientes.push(obj);
+  }
+
+  localStorage.setItem('fb_clientes', JSON.stringify(clientes));
+  sendOrQueue('salvarCliente', obj);
+  populateClienteSelect();
+  renderTabelaClientes();
+  limparFormCliente();
+  toast(`Cliente ${nome} salvo!`, '🏢');
+}
+
+function editarCliente(id) {
+  const c = clientes.find(c => c.id === id);
+  if (!c) return;
+  cliEditId = id;
+  document.getElementById('cli-nome').value     = c.nome;
+  document.getElementById('cli-doc').value      = c.doc;
+  document.getElementById('cli-tel').value      = c.tel;
+  document.getElementById('cli-email').value    = c.email;
+  document.getElementById('cli-end').value      = c.end;
+  document.getElementById('cli-cidade').value   = c.cidade;
+  document.getElementById('cli-estado').value   = c.estado;
+  document.getElementById('cli-contato').value  = c.contato;
+  document.getElementById('cli-contrato').value = c.contrato;
+  document.getElementById('cli-obs').value      = c.obs;
+  document.getElementById('cli-nome').focus();
+  toast('Editando cliente — faça as alterações e clique em Salvar.', '✏️');
+}
+
+function excluirCliente(id) {
+  const c = clientes.find(c => c.id === id);
+  if (!c) return;
+  if (!confirm(`Excluir cliente "${c.nome}"?`)) return;
+  clientes = clientes.filter(c => c.id !== id);
+  localStorage.setItem('fb_clientes', JSON.stringify(clientes));
+  populateClienteSelect();
+  renderTabelaClientes();
+  toast('Cliente removido.', '🗑️');
+}
+
+function limparFormCliente() {
+  cliEditId = null;
+  ['cli-nome','cli-doc','cli-tel','cli-email','cli-end','cli-cidade','cli-estado','cli-contato','cli-obs'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const ct = document.getElementById('cli-contrato');
+  if (ct) ct.value = '';
+}
+
+function renderTabelaClientes() {
+  const busca    = (document.getElementById('busca-cliente')?.value || '').toLowerCase();
+  const contrato = document.getElementById('filtro-contrato')?.value || '';
+  const tbody    = document.getElementById('tbody-clientes');
+  if (!tbody) return;
+  let filtrado = clientes.filter(c =>
+    (c.nome.toLowerCase().includes(busca) ||
+     (c.cidade||'').toLowerCase().includes(busca) ||
+     (c.contato||'').toLowerCase().includes(busca)) &&
+    (!contrato || c.contrato === contrato)
+  );
+  if (!filtrado.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:20px">Nenhum cliente cadastrado.</td></tr>';
+    return;
+  }
+  const contratoLabel = { mensal:'Mensal', trimestral:'Trimestral', anual:'Anual', avulso:'Avulso', '':'—' };
+  const contratoBadge = { mensal:'badge-green', trimestral:'badge-blue', anual:'badge-yellow', avulso:'badge-red', '':'' };
+  tbody.innerHTML = filtrado.map(c => `
+    <tr>
+      <td>
+        <div style="font-weight:600">${c.nome}</div>
+        <div style="font-size:11px;color:var(--label)">${c.doc||''}</div>
+      </td>
+      <td>
+        <div style="font-size:13px">${c.contato||'—'}</div>
+        <div style="font-size:11px;color:var(--label)">${c.tel||''}</div>
+      </td>
+      <td style="font-size:12px">${c.cidade||'—'}${c.estado?' / '+c.estado:''}</td>
+      <td>${c.contrato ? `<span class="badge ${contratoBadge[c.contrato]||''}">${contratoLabel[c.contrato]}</span>` : '—'}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="editarCliente(${c.id})">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="excluirCliente(${c.id})">🗑</button>
+      </td>
+    </tr>`).join('');
+}
+
+// ===================== CHAMADOS =====================
+let chamados = JSON.parse(localStorage.getItem('fb_chamados') || '[]');
+let chamadoFiltroStatus = 'todos';
+let chamadoEditId = null;
+
+const STATUS_LABEL = {
+  aberto:          '🔴 Aberto',
+  agendado:        '🟡 Agendado',
+  em_atendimento:  '🔵 Em Atendimento',
+  concluido:       '🟢 Concluído',
+  cancelado:       '⚫ Cancelado',
+};
+const STATUS_BADGE = {
+  aberto:          'badge-red',
+  agendado:        'badge-yellow',
+  em_atendimento:  'badge-blue',
+  concluido:       'badge-green',
+  cancelado:       '',
+};
+
+function saveChamados() {
+  localStorage.setItem('fb_chamados', JSON.stringify(chamados));
+}
+
+function gerarNumChamado() {
+  const seq = (chamados.length + 1).toString().padStart(4, '0');
+  return `CHM-${new Date().getFullYear()}-${seq}`;
+}
+
+function abrirModalChamado(id = null) {
+  chamadoEditId = id;
+  const modal = document.getElementById('chamado-modal');
+  const title = document.getElementById('chamado-modal-title');
+  const btnRAT = document.getElementById('btn-gerar-rat-chamado');
+
+  // Preencher select de técnico
+  const selTec = document.getElementById('ch-tecnico');
+  selTec.innerHTML = '<option value="">— A definir —</option>' +
+    tecnicos.filter(t => t.status === 'ativo')
+      .map(t => `<option value="${t.nome}">${t.nome}</option>`).join('');
+
+  if (id) {
+    // Modo edição
+    const c = chamados.find(c => c.id === id);
+    if (!c) return;
+    title.textContent = `✏️ Editar Chamado ${c.num}`;
+    document.getElementById('chamado-edit-id').value = id;
+    document.getElementById('ch-cliente').value     = c.cliente     || '';
+    document.getElementById('ch-solicitante').value = c.solicitante || '';
+    document.getElementById('ch-tel').value         = c.tel         || '';
+    document.getElementById('ch-email').value       = c.email       || '';
+    document.getElementById('ch-end').value         = c.end         || '';
+    document.getElementById('ch-tipo').value        = c.tipo        || '';
+    document.getElementById('ch-prioridade').value  = c.prioridade  || 'normal';
+    document.getElementById('ch-problema').value    = c.problema    || '';
+    document.getElementById('ch-tecnico').value     = c.tecnico     || '';
+    document.getElementById('ch-data').value        = c.data        || '';
+    document.getElementById('ch-hora').value        = c.hora        || '';
+    document.getElementById('ch-status').value      = c.status      || 'aberto';
+    document.getElementById('ch-obs').value         = c.obs         || '';
+
+    // Mostrar botão de gerar RAT se não concluído com RAT
+    btnRAT.style.display = (!c.ratNum && c.status !== 'cancelado') ? '' : 'none';
+
+    // Histórico
+    if (c.historico && c.historico.length) {
+      document.getElementById('ch-historico-section').style.display = '';
+      document.getElementById('ch-historico-list').innerHTML = c.historico.map(h =>
+        `<div style="padding:6px 0;border-bottom:1px solid var(--border)">
+          <span style="font-family:'IBM Plex Mono',monospace;color:var(--muted)">${h.when}</span>
+          · <strong>${h.user||'Sistema'}</strong>: ${h.msg}
+        </div>`).join('');
+    } else {
+      document.getElementById('ch-historico-section').style.display = 'none';
+    }
+  } else {
+    // Modo novo
+    title.textContent = '🎫 Novo Chamado';
+    document.getElementById('chamado-edit-id').value = '';
+    ['ch-cliente','ch-solicitante','ch-tel','ch-email','ch-end','ch-problema','ch-obs'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.value = '';
+    });
+    document.getElementById('ch-tecnico').value    = '';
+    document.getElementById('ch-data').value       = '';
+    document.getElementById('ch-hora').value       = '';
+    document.getElementById('ch-status').value     = 'aberto';
+    document.getElementById('ch-prioridade').value = 'normal';
+    document.getElementById('ch-historico-section').style.display = 'none';
+    btnRAT.style.display = 'none';
+  }
+
+  modal.classList.add('open');
+  setTimeout(() => document.getElementById('ch-cliente')?.focus(), 150);
+}
+
+function fecharModalChamado() {
+  document.getElementById('chamado-modal').classList.remove('open');
+  chamadoEditId = null;
+}
+
+async function salvarChamado() {
+  const cliente  = document.getElementById('ch-cliente').value.trim();
+  const problema = document.getElementById('ch-problema').value.trim();
+  if (!cliente || !problema) {
+    toast('Preencha cliente e problema!', '⚠️'); return;
+  }
+
+  const agora = new Date().toLocaleString('pt-BR');
+  const statusNovo = document.getElementById('ch-status').value;
+
+  if (chamadoEditId) {
+    // Atualizar existente
+    const idx = chamados.findIndex(c => c.id === chamadoEditId);
+    if (idx === -1) return;
+    const anterior = chamados[idx].status;
+    chamados[idx] = {
+      ...chamados[idx],
+      cliente,
+      solicitante: document.getElementById('ch-solicitante').value.trim(),
+      tel:         document.getElementById('ch-tel').value.trim(),
+      email:       document.getElementById('ch-email').value.trim(),
+      end:         document.getElementById('ch-end').value.trim(),
+      tipo:        document.getElementById('ch-tipo').value,
+      prioridade:  document.getElementById('ch-prioridade').value,
+      problema,
+      tecnico:     document.getElementById('ch-tecnico').value,
+      data:        document.getElementById('ch-data').value,
+      hora:        document.getElementById('ch-hora').value,
+      status:      statusNovo,
+      obs:         document.getElementById('ch-obs').value.trim(),
+      updatedAt:   Date.now(),
+    };
+    // Registrar mudança no histórico
+    if (anterior !== statusNovo) {
+      chamados[idx].historico = chamados[idx].historico || [];
+      chamados[idx].historico.push({
+        when: agora,
+        user: 'Usuário',
+        msg:  `Status alterado de "${STATUS_LABEL[anterior]}" para "${STATUS_LABEL[statusNovo]}"`,
+      });
+    }
+    toast(`Chamado ${chamados[idx].num} atualizado!`, '✅');
+  } else {
+    // Novo chamado
+    const novo = {
+      id:          Date.now(),
+      num:         gerarNumChamado(),
+      cliente,
+      solicitante: document.getElementById('ch-solicitante').value.trim(),
+      tel:         document.getElementById('ch-tel').value.trim(),
+      email:       document.getElementById('ch-email').value.trim(),
+      end:         document.getElementById('ch-end').value.trim(),
+      tipo:        document.getElementById('ch-tipo').value,
+      prioridade:  document.getElementById('ch-prioridade').value,
+      problema,
+      tecnico:     document.getElementById('ch-tecnico').value,
+      data:        document.getElementById('ch-data').value,
+      hora:        document.getElementById('ch-hora').value,
+      status:      statusNovo,
+      obs:         document.getElementById('ch-obs').value.trim(),
+      ratNum:      null,
+      createdAt:   Date.now(),
+      historico:   [{ when: agora, user: 'Usuário', msg: 'Chamado aberto.' }],
+    };
+    chamados.unshift(novo);
+    toast(`Chamado ${novo.num} aberto!`, '🎫');
+
+    // Auto-preencher cliente
+    const cli = clientes.find(c => c.nome.toLowerCase() === cliente.toLowerCase());
+    if (cli && !novo.tel)   novo.tel   = cli.tel;
+    if (cli && !novo.email) novo.email = cli.email;
+  }
+
+  saveChamados();
+  sendOrQueue('salvarChamado', chamados[chamadoEditId ? chamados.findIndex(c=>c.id===chamadoEditId) : 0]);
+  fecharModalChamado();
+  renderChamados();
+  atualizarBadgeChamados();
+  renderDashboard();
+}
+
+function filtrarChamados(status, btn) {
+  chamadoFiltroStatus = status;
+  document.querySelectorAll('.chamado-filtro').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderChamados();
+}
+
+function renderChamados() {
+  const busca    = (document.getElementById('busca-chamado')?.value || '').toLowerCase();
+  const tecFilt  = document.getElementById('filtro-tec-chamado')?.value || '';
+  const dataFilt = document.getElementById('filtro-data-chamado')?.value || '';
+
+  let lista = [...chamados];
+  if (chamadoFiltroStatus !== 'todos') lista = lista.filter(c => c.status === chamadoFiltroStatus);
+  if (tecFilt)  lista = lista.filter(c => c.tecnico === tecFilt);
+  if (dataFilt) lista = lista.filter(c => c.data === dataFilt);
+  if (busca)    lista = lista.filter(c =>
+    (c.cliente||'').toLowerCase().includes(busca) ||
+    (c.problema||'').toLowerCase().includes(busca) ||
+    (c.tecnico||'').toLowerCase().includes(busca) ||
+    (c.num||'').toLowerCase().includes(busca)
+  );
+
+  const el = document.getElementById('chamados-lista');
+  if (!el) return;
+
+  if (!lista.length) {
+    el.innerHTML = `<div class="card" style="text-align:center;padding:40px;color:var(--muted)">
+      <div style="font-size:32px;margin-bottom:8px">🎫</div>
+      Nenhum chamado encontrado. Clique em <strong>+ Novo Chamado</strong> para começar.
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = lista.map(c => {
+    const prio = c.prioridade || 'normal';
+    const dataFmt = c.data ? new Date(c.data+'T12:00').toLocaleDateString('pt-BR') : '';
+    const horaFmt = c.hora || '';
+    const agendamento = (dataFmt || horaFmt) ? `📅 ${dataFmt}${horaFmt?' às '+horaFmt:''}` : '';
+    const tecnico = c.tecnico ? `👷 ${c.tecnico}` : '👷 A definir';
+    const durAberto = c.createdAt
+      ? (() => {
+          const d = Date.now() - c.createdAt;
+          const h = Math.floor(d / 3600000);
+          const dias = Math.floor(d / 86400000);
+          return dias > 0 ? `Aberto há ${dias}d` : `Aberto há ${h}h`;
+        })() : '';
+
+    return `<div class="chamado-card prio-${prio} status-${c.status}">
+      <div class="chamado-header">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <span class="chamado-num">${c.num}</span>
+            <span class="badge ${STATUS_BADGE[c.status]||''}">${STATUS_LABEL[c.status]||c.status}</span>
+            ${prio==='urgente' ? '<span class="badge badge-red">🚨 Urgente</span>' : ''}
+            ${prio==='alta'    ? '<span class="badge" style="background:rgba(255,107,0,.15);color:var(--accent2);border-color:var(--accent2)">⚡ Alta</span>' : ''}
+          </div>
+          <div class="chamado-cliente">${c.cliente}</div>
+          ${c.solicitante ? `<div style="font-size:12px;color:var(--label)">👤 ${c.solicitante}${c.tel?' · '+c.tel:''}</div>` : ''}
+        </div>
+        <div style="text-align:right;font-size:12px;color:var(--muted)">
+          ${durAberto ? `<div>${durAberto}</div>` : ''}
+          ${c.createdAt ? `<div>${new Date(c.createdAt).toLocaleDateString('pt-BR')}</div>` : ''}
+        </div>
+      </div>
+      <div class="chamado-problema">${c.problema}</div>
+      <div class="chamado-meta">
+        <span>${tecnico}</span>
+        ${agendamento ? `<span>${agendamento}</span>` : ''}
+        ${c.tipo ? `<span>🔧 ${c.tipo}</span>` : ''}
+        ${c.ratNum ? `<span style="color:var(--green)">📋 RAT: ${c.ratNum}</span>` : ''}
+      </div>
+      <div class="chamado-actions">
+        <button class="btn btn-ghost btn-sm" onclick="abrirModalChamado(${c.id})">✏️ Editar</button>
+        ${c.status !== 'concluido' && c.status !== 'cancelado' ? `
+          <button class="btn btn-ghost btn-sm" onclick="avancarStatus(${c.id})">▶ Avançar Status</button>` : ''}
+        ${!c.ratNum && c.status !== 'cancelado' ? `
+          <button class="btn btn-primary btn-sm" onclick="gerarRATdoChamadoId(${c.id})">📋 Gerar RAT</button>` : ''}
+        ${c.ratNum ? `
+          <button class="btn btn-ghost btn-sm" onclick="viewRAT('${c.ratNum}')">👁 Ver RAT</button>` : ''}
+        <button class="btn btn-warn btn-sm" onclick="whatsAppChamado(${c.id})">📱 WhatsApp</button>
+        <button class="btn btn-danger btn-sm" onclick="excluirChamado(${c.id})">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function avancarStatus(id) {
+  const c = chamados.find(c => c.id === id);
+  if (!c) return;
+  const fluxo = ['aberto','agendado','em_atendimento','concluido'];
+  const idx = fluxo.indexOf(c.status);
+  if (idx === -1 || idx === fluxo.length - 1) return;
+  const anterior = c.status;
+  c.status = fluxo[idx + 1];
+  c.updatedAt = Date.now();
+  c.historico = c.historico || [];
+  c.historico.push({
+    when: new Date().toLocaleString('pt-BR'),
+    user: 'Usuário',
+    msg:  `Status: "${STATUS_LABEL[anterior]}" → "${STATUS_LABEL[c.status]}"`,
+  });
+  saveChamados();
+  renderChamados();
+  atualizarBadgeChamados();
+  toast(`Chamado ${c.num}: ${STATUS_LABEL[c.status]}`, '✅');
+}
+
+function excluirChamado(id) {
+  const c = chamados.find(c => c.id === id);
+  if (!c || !confirm(`Excluir chamado ${c.num}?`)) return;
+  chamados = chamados.filter(c => c.id !== id);
+  saveChamados();
+  renderChamados();
+  atualizarBadgeChamados();
+  toast('Chamado excluído.', '🗑️');
+}
+
+function whatsAppChamado(id) {
+  const c = chamados.find(c => c.id === id);
+  if (!c) return;
+  const dataFmt = c.data ? new Date(c.data+'T12:00').toLocaleDateString('pt-BR') : 'A definir';
+  const msg = encodeURIComponent(
+    `*FB Informática · Chamado ${c.num}*
+` +
+    `━━━━━━━━━━━━━━━
+` +
+    `🏢 Cliente: ${c.cliente}
+` +
+    `📌 Problema: ${c.problema}
+` +
+    `📅 Agendamento: ${dataFmt}${c.hora?' às '+c.hora:''}
+` +
+    `👷 Técnico: ${c.tecnico||'A definir'}
+` +
+    `📊 Status: ${STATUS_LABEL[c.status]}
+` +
+    `━━━━━━━━━━━━━━━
+` +
+    `_FB Informática · Soluções em TI & CFTV_`
+  );
+  const tel = c.tel?.replace(/\D/g,'') || '';
+  if (tel) {
+    window.open(`https://wa.me/55${tel}?text=${msg}`, '_blank');
+  } else {
+    const phone = prompt('Número WhatsApp (com DDI, ex: 5582999999999):');
+    if (phone) window.open(`https://wa.me/${phone.replace(/\D/g,'')}?text=${msg}`, '_blank');
+  }
+}
+
+// Gerar RAT pré-preenchida a partir de um chamado
+function gerarRATdoChamadoId(id) {
+  const c = chamados.find(c => c.id === id);
+  if (!c) return;
+  // Navegar para aba RAT preenchida
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('view-rat').classList.add('active');
+  document.querySelector("[onclick=\"showView('rat')\"]")?.classList.add('active');
+  initRATForm();
+  setTimeout(() => {
+    document.getElementById('rat-cliente').value     = c.cliente     || '';
+    document.getElementById('rat-solicitante').value = c.solicitante || '';
+    document.getElementById('rat-email-cliente').value = c.email     || '';
+    document.getElementById('rat-tel').value         = c.tel         || '';
+    document.getElementById('rat-end').value         = c.end         || '';
+    document.getElementById('rat-tipo').value        = c.tipo        || '';
+    document.getElementById('rat-tecnico').value     = c.tecnico     || '';
+    document.getElementById('rat-data').value        = c.data || new Date().toISOString().split('T')[0];
+    document.getElementById('rat-problema').value    = c.problema    || '';
+    // Hora atual como entrada
+    const agora = new Date().toTimeString().slice(0,5);
+    document.getElementById('rat-entrada').value = agora;
+    // Guardar referência do chamado para vincular após salvar
+    window._chamadoOrigem = c.id;
+    initAssinatura();
+    toast(`RAT pré-preenchida com dados do ${c.num}!`, '📋');
+  }, 100);
+}
+
+function gerarRATdoChamado() {
+  const id = parseInt(document.getElementById('chamado-edit-id').value);
+  fecharModalChamado();
+  gerarRATdoChamadoId(id);
+}
+
+function atualizarBadgeChamados() {
+  const abertos = chamados.filter(c => c.status === 'aberto' || c.status === 'agendado').length;
+  const tab = document.getElementById('tab-chamados');
+  if (tab) tab.textContent = abertos > 0 ? `🎫 Chamados (${abertos})` : '🎫 Chamados';
+}
+
+// Vincular chamado à RAT salva
+function vincularChamadoRAT(ratNum) {
+  if (!window._chamadoOrigem) return;
+  const c = chamados.find(c => c.id === window._chamadoOrigem);
+  if (c) {
+    c.ratNum   = ratNum;
+    c.status   = 'concluido';
+    c.historico = c.historico || [];
+    c.historico.push({
+      when: new Date().toLocaleString('pt-BR'),
+      user: 'Sistema',
+      msg:  `RAT ${ratNum} gerada. Chamado concluído.`,
+    });
+    saveChamados();
+    atualizarBadgeChamados();
+    toast(`Chamado vinculado à RAT ${ratNum} e marcado como concluído!`, '🟢');
+  }
+  window._chamadoOrigem = null;
+}
+
+// ===================== EDIÇÃO DE RAT =====================
+function editarRAT(num) {
+  const idx = rats.findIndex(r => r.num === num);
+  if (idx === -1) return;
+  const r = rats[idx];
+  document.getElementById('edit-rat-idx').value         = idx;
+  document.getElementById('edit-rat-num-title').textContent = r.num;
+  document.getElementById('edit-data').value            = r.data      || '';
+  document.getElementById('edit-cliente').value         = r.cliente   || '';
+  document.getElementById('edit-solicitante').value     = r.solicitante || '';
+  document.getElementById('edit-entrada').value         = r.entrada   || '';
+  document.getElementById('edit-saida').value           = r.saida     || '';
+  document.getElementById('edit-tipo').value            = r.tipo      || '';
+  document.getElementById('edit-problema').value        = r.problema  || '';
+  document.getElementById('edit-solucao').value         = r.solucao   || '';
+  document.getElementById('edit-obs').value             = r.obs       || '';
+  document.getElementById('edit-status').value          = r.status    || 'concluida';
+
+  // Preencher select de técnico
+  const selTec = document.getElementById('edit-tecnico');
+  selTec.innerHTML = '<option value="">— Selecionar —</option>' +
+    tecnicos.filter(t => t.status === 'ativo')
+      .map(t => `<option value="${t.nome}">${t.nome}</option>`).join('');
+  selTec.value = r.tecnico || '';
+
+  document.getElementById('edit-rat-modal').classList.add('open');
+}
+
+async function salvarEdicaoRAT() {
+  const idx = parseInt(document.getElementById('edit-rat-idx').value);
+  if (isNaN(idx) || idx < 0) return;
+
+  const rat = rats[idx];
+  rats[idx] = {
+    ...rat,
+    tecnico:     document.getElementById('edit-tecnico').value,
+    data:        document.getElementById('edit-data').value,
+    cliente:     document.getElementById('edit-cliente').value.trim(),
+    solicitante: document.getElementById('edit-solicitante').value.trim(),
+    entrada:     document.getElementById('edit-entrada').value,
+    saida:       document.getElementById('edit-saida').value,
+    tipo:        document.getElementById('edit-tipo').value,
+    problema:    document.getElementById('edit-problema').value.trim(),
+    solucao:     document.getElementById('edit-solucao').value.trim(),
+    obs:         document.getElementById('edit-obs').value.trim(),
+    status:      document.getElementById('edit-status').value,
+    updatedAt:   Date.now(),
+  };
+  save();
+  sendOrQueue('salvarRAT', rats[idx]);
+  document.getElementById('edit-rat-modal').classList.remove('open');
+  renderHistorico();
+  renderDashboard();
+  toast(`RAT ${rat.num} atualizada!`, '✅');
+}
+
+// ===================== FOTOS DE EVIDÊNCIA =====================
+let fotosRAT = []; // Array de base64
+
+function adicionarFotos(input) {
+  const files = Array.from(input.files);
+  files.forEach(file => {
+    if (!file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      fotosRAT.push({ nome: file.name, base64: e.target.result });
+      renderFotos();
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+}
+
+function renderFotos() {
+  const grid = document.getElementById('fotos-grid');
+  if (!grid) return;
+  grid.innerHTML = fotosRAT.map((f, i) =>
+    `<div style="position:relative">
+      <img src="${f.base64}" class="foto-thumb" onclick="verFoto(${i})" title="${f.nome}">
+      <button onclick="removerFoto(${i})" style="position:absolute;top:-4px;right:-4px;
+        background:var(--red);border:none;border-radius:50%;width:18px;height:18px;
+        color:#fff;font-size:11px;cursor:pointer;line-height:18px;text-align:center">✕</button>
+    </div>`
+  ).join('') +
+  `<div class="foto-add" onclick="document.getElementById('foto-input').click()">
+    <span style="font-size:24px">📷</span>
+    <span>Adicionar</span>
+  </div>`;
+}
+
+function removerFoto(i) {
+  fotosRAT.splice(i, 1);
+  renderFotos();
+}
+
+function verFoto(i) {
+  const img = fotosRAT[i];
+  const w = window.open('', '_blank');
+  w.document.write(`<html><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh">
+    <img src="${img.base64}" style="max-width:100%;max-height:100vh;object-fit:contain">
+  </body></html>`);
+}
+
+// ===================== ASSINATURA DIGITAL =====================
+let sigCanvas, sigCtx, sigDrawing = false, sigSigned = false;
+
+function initAssinatura() {
+  sigCanvas = document.getElementById('sig-canvas');
+  if (!sigCanvas) return;
+  sigCtx = sigCanvas.getContext('2d');
+
+  // Ajustar resolução real do canvas
+  const rect = sigCanvas.getBoundingClientRect();
+  sigCanvas.width  = rect.width  * window.devicePixelRatio;
+  sigCanvas.height = rect.height * window.devicePixelRatio;
+  sigCtx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  sigCtx.strokeStyle = '#003366';
+  sigCtx.lineWidth   = 2.5;
+  sigCtx.lineCap     = 'round';
+  sigCtx.lineJoin    = 'round';
+
+  function getPos(e) {
+    const r = sigCanvas.getBoundingClientRect();
+    const src = e.touches ? e.touches[0] : e;
+    return { x: src.clientX - r.left, y: src.clientY - r.top };
+  }
+
+  sigCanvas.addEventListener('mousedown',  e => { sigDrawing = true; const p = getPos(e); sigCtx.beginPath(); sigCtx.moveTo(p.x, p.y); });
+  sigCanvas.addEventListener('mousemove',  e => { if (!sigDrawing) return; const p = getPos(e); sigCtx.lineTo(p.x, p.y); sigCtx.stroke(); sigSigned = true; });
+  sigCanvas.addEventListener('mouseup',    () => { sigDrawing = false; atualizarStatusAssinatura(); });
+  sigCanvas.addEventListener('mouseleave', () => { sigDrawing = false; });
+
+  sigCanvas.addEventListener('touchstart', e => { e.preventDefault(); sigDrawing = true; const p = getPos(e); sigCtx.beginPath(); sigCtx.moveTo(p.x, p.y); }, { passive: false });
+  sigCanvas.addEventListener('touchmove',  e => { e.preventDefault(); if (!sigDrawing) return; const p = getPos(e); sigCtx.lineTo(p.x, p.y); sigCtx.stroke(); sigSigned = true; }, { passive: false });
+  sigCanvas.addEventListener('touchend',   () => { sigDrawing = false; atualizarStatusAssinatura(); });
+}
+
+function atualizarStatusAssinatura() {
+  const el = document.getElementById('sig-status');
+  if (!el) return;
+  if (sigSigned) {
+    sigCanvas.classList.add('signed');
+    el.innerHTML = '<span style="color:var(--green)">✅ Assinatura capturada</span>';
+  }
+}
+
+function limparAssinatura() {
+  if (!sigCtx || !sigCanvas) return;
+  sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+  sigCanvas.classList.remove('signed');
+  sigSigned = false;
+  const el = document.getElementById('sig-status');
+  if (el) el.textContent = '';
+}
+
+function getAssinaturaBase64() {
+  if (!sigCanvas || !sigSigned) return '';
+  return sigCanvas.toDataURL('image/png');
+}
+
+// ===================== RELATÓRIO MENSAL =====================
+function gerarRelatorio() {
+  const tecFiltro = document.getElementById('rel-tecnico')?.value || '';
+  const mesFiltro = document.getElementById('rel-mes')?.value   || '';
+
+  let dados = [...rats];
+  if (tecFiltro) dados = dados.filter(r => r.tecnico === tecFiltro);
+  if (mesFiltro) dados = dados.filter(r => r.data && r.data.startsWith(mesFiltro));
+
+  if (!dados.length && mesFiltro) {
+    toast('Nenhuma RAT encontrada para este período.', '⚠️');
+  }
+
+  // KPIs
+  let totalMin = 0;
+  const clientesSet = new Set();
+  let totalPecas = 0;
+
+  dados.forEach(r => {
+    if (r.entrada && r.saida) {
+      const [h1,m1] = r.entrada.split(':').map(Number);
+      const [h2,m2] = r.saida.split(':').map(Number);
+      totalMin += (h2*60+m2) - (h1*60+m1);
+    }
+    if (r.cliente) clientesSet.add(r.cliente);
+    if (r.pecas) totalPecas += r.pecas.filter(p => p.desc).length;
+  });
+
+  const horas = `${Math.floor(totalMin/60)}h${String(totalMin%60).padStart(2,'0')}m`;
+
+  document.getElementById('rel-total').textContent    = dados.length;
+  document.getElementById('rel-horas').textContent    = horas;
+  document.getElementById('rel-clientes').textContent = clientesSet.size;
+  document.getElementById('rel-pecas').textContent    = totalPecas;
+
+  document.getElementById('rel-resumo').style.display     = '';
+  document.getElementById('rel-por-tecnico').style.display = '';
+  document.getElementById('rel-tabela-card').style.display = '';
+
+  // Por técnico
+  const porTec = {};
+  dados.forEach(r => {
+    if (!r.tecnico) return;
+    if (!porTec[r.tecnico]) porTec[r.tecnico] = { total: 0, min: 0, clientes: new Set() };
+    porTec[r.tecnico].total++;
+    if (r.entrada && r.saida) {
+      const [h1,m1] = r.entrada.split(':').map(Number);
+      const [h2,m2] = r.saida.split(':').map(Number);
+      porTec[r.tecnico].min += (h2*60+m2) - (h1*60+m1);
+    }
+    if (r.cliente) porTec[r.tecnico].clientes.add(r.cliente);
+  });
+
+  const relTecEl = document.getElementById('rel-por-tecnico');
+  relTecEl.innerHTML = `<div class="card section-gap"><div class="card-title">Desempenho por Técnico</div>
+    <div style="display:flex;flex-wrap:wrap;gap:12px">
+    ${Object.entries(porTec).map(([nome, d]) => {
+      const initials = nome.split(' ').map(w=>w[0]).slice(0,2).join('');
+      const h = `${Math.floor(d.min/60)}h${String(d.min%60).padStart(2,'0')}m`;
+      return `<div style="flex:1;min-width:180px;background:var(--surface);border:1px solid var(--border);
+        border-radius:8px;padding:14px;display:flex;align-items:center;gap:12px">
+        <div style="width:42px;height:42px;border-radius:50%;background:rgba(0,212,255,.15);
+          border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;
+          font-weight:700;color:var(--accent);font-size:14px;flex-shrink:0">${initials}</div>
+        <div>
+          <div style="font-weight:600;font-size:14px">${nome}</div>
+          <div style="font-size:12px;color:var(--label)">${d.total} RATs · ${h} · ${d.clientes.size} cliente(s)</div>
+        </div>
+      </div>`;
+    }).join('')}
+    </div></div>`;
+
+  // Tabela detalhe
+  const tbody = document.getElementById('rel-tbody');
+  if (!dados.length) {
+    tbody.innerHTML = '<tr><td colspan="9" style="color:var(--muted);text-align:center;padding:20px">Nenhum registro.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = dados.map(r => {
+    let dur = '—';
+    if (r.entrada && r.saida) {
+      const [h1,m1] = r.entrada.split(':').map(Number);
+      const [h2,m2] = r.saida.split(':').map(Number);
+      const d = (h2*60+m2)-(h1*60+m1);
+      dur = `${Math.floor(d/60)}h${String(d%60).padStart(2,'0')}m`;
+    }
+    return `<tr>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent)">${r.num}</td>
+      <td>${r.data ? new Date(r.data+'T12:00').toLocaleDateString('pt-BR') : '—'}</td>
+      <td><strong>${r.tecnico||'—'}</strong></td>
+      <td>${r.cliente||'—'}</td>
+      <td style="font-size:12px">${r.tipo||'—'}</td>
+      <td>${r.entrada||'—'}</td>
+      <td>${r.saida||'—'}</td>
+      <td>${dur}</td>
+      <td><span class="badge ${r.status==='concluida'?'badge-green':'badge-yellow'}">${r.status==='concluida'?'Concluída':'Pendente'}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function exportarRelatorioCSV() {
+  const tecFiltro = document.getElementById('rel-tecnico')?.value || '';
+  const mesFiltro = document.getElementById('rel-mes')?.value   || '';
+  let dados = [...rats];
+  if (tecFiltro) dados = dados.filter(r => r.tecnico === tecFiltro);
+  if (mesFiltro) dados = dados.filter(r => r.data && r.data.startsWith(mesFiltro));
+  const headers = ['Nº RAT','Data','Técnico','Cliente','Tipo','Entrada','Saída','Status'];
+  const rows = dados.map(r =>
+    [r.num,r.data,r.tecnico,r.cliente,r.tipo,r.entrada,r.saida,r.status]
+    .map(v => `"${(v||'').replace(/"/g,'""')}"`)
+  );
+  const csv = [headers,...rows].map(r=>r.join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));
+  const mes = mesFiltro || new Date().toISOString().substring(0,7);
+  a.download = `FB_Relatorio_${mes}${tecFiltro?'_'+tecFiltro:''}.csv`;
+  a.click();
+  toast('Relatório exportado!','⬇️');
+}
+
+function imprimirRelatorio() {
+  const el1 = document.getElementById('rel-resumo');
+  const el2 = document.getElementById('rel-por-tecnico');
+  const el3 = document.getElementById('rel-tabela-card');
+  if (el1.style.display === 'none') { gerarRelatorio(); }
+  const win = window.open('','_blank');
+  win.document.write(`<html><head><title>Relatório FB Informática</title>
+    <style>body{font-family:Arial,sans-serif;padding:20px;color:#111}
+    table{width:100%;border-collapse:collapse}th,td{border:1px solid #ddd;padding:7px;text-align:left;font-size:12px}
+    th{background:#003366;color:#fff}h2{color:#003366}
+    .grid{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+    .kpi{border:1px solid #ddd;border-radius:6px;padding:12px;flex:1;min-width:120px;text-align:center}
+    .kpi-num{font-size:28px;font-weight:700;color:#003366}.kpi-label{font-size:11px;color:#666}
+    @media print{body{padding:0}}</style></head><body>
+    <h2>Relatório de Atendimentos · FB Informática</h2>
+    <p style="color:#666;font-size:12px">Gerado em ${new Date().toLocaleString('pt-BR')}</p>
+    <div class="grid">
+      <div class="kpi"><div class="kpi-num">${document.getElementById('rel-total').textContent}</div><div class="kpi-label">Total RATs</div></div>
+      <div class="kpi"><div class="kpi-num">${document.getElementById('rel-horas').textContent}</div><div class="kpi-label">Horas em Campo</div></div>
+      <div class="kpi"><div class="kpi-num">${document.getElementById('rel-clientes').textContent}</div><div class="kpi-label">Clientes</div></div>
+      <div class="kpi"><div class="kpi-num">${document.getElementById('rel-pecas').textContent}</div><div class="kpi-label">Peças</div></div>
+    </div>
+    ${el3.innerHTML}
+    <\x73cript>window.print();<\/\x73cript></body></html>`);
+}
+
+// ===================== NOTIFICAÇÕES =====================
+let notificacoes = [];
+
+function verificarAlertas() {
+  notificacoes = [];
+  const diasAlerta   = parseInt(document.getElementById('cfg-dias-alerta')?.value  || '3');
+  const diasCheckin  = parseInt(document.getElementById('cfg-dias-checkin')?.value || '1');
+  const agora        = Date.now();
+  const msAlerta     = diasAlerta  * 86400000;
+  const msCheckin    = diasCheckin * 86400000;
+
+  // RATs pendentes antigas
+  rats.filter(r => r.status === 'pendente').forEach(r => {
+    const idade = agora - (r.createdAt || agora);
+    if (idade > msAlerta) {
+      notificacoes.push({
+        tipo: 'pendente',
+        icone: '⚠️',
+        titulo: `RAT ${r.num} pendente há ${Math.floor(idade/86400000)} dia(s)`,
+        sub: `${r.tecnico} → ${r.cliente}`,
+        time: r.data,
+        urgente: idade > msAlerta * 2,
+      });
+    }
+  });
+
+  // Checkins sem checkout
+  checkins.filter(c => !c.fim).forEach(c => {
+    const idade = agora - c.inicio;
+    if (idade > msCheckin) {
+      notificacoes.push({
+        tipo: 'checkin',
+        icone: '📍',
+        titulo: `Check-in sem checkout: ${c.tecnico}`,
+        sub: `Cliente: ${c.cliente} · Entrada: ${fmtTime(c.inicio)}`,
+        time: fmtDate(c.inicio),
+        urgente: true,
+      });
+    }
+  });
+
+  // Técnico em campo há mais de 8h
+  if (activeCheckin) {
+    const dur = agora - activeCheckin.inicio;
+    if (dur > 8 * 3600000) {
+      notificacoes.push({
+        tipo: 'campo',
+        icone: '🕐',
+        titulo: `${activeCheckin.tecnico} em campo há ${Math.floor(dur/3600000)}h`,
+        sub: `Cliente: ${activeCheckin.cliente}`,
+        time: fmtTime(activeCheckin.inicio),
+        urgente: dur > 10 * 3600000,
+      });
+    }
+  }
+
+  renderNotificacoes();
+
+  // Atualizar badge da aba
+  const tabNotif = document.getElementById('tab-notif');
+  if (tabNotif) {
+    tabNotif.textContent = notificacoes.length
+      ? `🔔 Alertas (${notificacoes.length})`
+      : '🔔 Alertas';
+    tabNotif.style.color = notificacoes.some(n=>n.urgente) ? 'var(--red)' : '';
+  }
+
+  // Notificação nativa do browser
+  if (notificacoes.length && Notification.permission === 'granted') {
+    const urgentes = notificacoes.filter(n => n.urgente);
+    if (urgentes.length) {
+      new Notification('FB Informática · Alerta', {
+        body: urgentes[0].titulo + (urgentes.length > 1 ? ` e mais ${urgentes.length-1} alerta(s).` : ''),
+        icon: '🔔',
+      });
+    }
+  }
+}
+
+function renderNotificacoes() {
+  const el = document.getElementById('notif-list');
+  if (!el) return;
+  if (!notificacoes.length) {
+    el.innerHTML = `<div style="text-align:center;padding:30px 0;color:var(--green)">
+      <div style="font-size:32px">✅</div>
+      <div style="font-size:14px;margin-top:8px">Tudo em dia! Nenhum alerta.</div>
+    </div>`;
+    return;
+  }
+  el.innerHTML = notificacoes.map(n => `
+    <div class="notif-item">
+      <div class="notif-icon">${n.icone}</div>
+      <div style="flex:1">
+        <div class="notif-title" style="color:${n.urgente?'var(--red)':'var(--text)'}">${n.titulo}</div>
+        <div class="notif-sub">${n.sub}</div>
+        <div class="notif-time">${n.time||''}</div>
+      </div>
+      ${n.urgente ? '<span class="badge badge-red">Urgente</span>' : '<span class="badge badge-yellow">Atenção</span>'}
+    </div>`).join('');
+}
+
+async function pedirPermissaoNotif() {
+  const el = document.getElementById('notif-perm-status');
+  if (!('Notification' in window)) {
+    if (el) el.textContent = 'Não suportado neste browser.'; return;
+  }
+  const perm = await Notification.requestPermission();
+  if (el) el.textContent = perm === 'granted' ? '✅ Ativado' : '❌ Bloqueado — verifique as configurações do browser.';
+}
+
+// ===================== DIAGNÓSTICO =====================
+function diagLog(msg, tipo = 'info') {
+  const el = document.getElementById('diag-log');
+  if (!el) return;
+  el.style.display = 'block';
+  const cor = tipo === 'ok' ? 'var(--green)' : tipo === 'erro' ? 'var(--red)' : 'var(--label)';
+  const time = new Date().toLocaleTimeString('pt-BR');
+  el.innerHTML += `<div style="color:${cor}">[${time}] ${msg}</div>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+function atualizarPainelConfig() {
+  const url = localStorage.getItem('fb_sheet_url') || '';
+  const prev = document.getElementById('sheets-url-preview');
+  if (prev) {
+    prev.textContent = url
+      ? '🔗 ' + url.substring(0, 60) + (url.length > 60 ? '...' : '')
+      : 'URL não configurada — clique em ⚙ Configurar URL';
+  }
+  const pb = document.getElementById('pending-badge');
+  if (pb) {
+    if (pendingQueue.length > 0) {
+      pb.style.display = 'inline-flex';
+      pb.textContent = pendingQueue.length + ' pendente(s)';
+    } else {
+      pb.style.display = 'none';
+    }
+  }
+}
+
+async function testarConexao() {
+  const url = localStorage.getItem('fb_sheet_url') || '';
+  if (!url) { diagLog('URL não configurada!', 'erro'); return; }
+
+  diagLog('Testando conexão com Apps Script...', 'info');
+  diagLog(`URL: ${url.substring(0,70)}...`, 'info');
+
+  // Teste 1: JSONP ping
+  diagLog('Tentando JSONP ping...', 'info');
+  const r = await sheetGetJSONP('ping');
+  if (r && r.ok) {
+    diagLog('✅ JSONP OK! Resposta: ' + JSON.stringify(r), 'ok');
+    updateSheetStatus(true);
+    sheetOnline = true;
+    return;
+  }
+  diagLog('❌ JSONP falhou — verifique se o Apps Script está publicado corretamente.', 'erro');
+
+  // Teste 2: fetch simples
+  diagLog('Tentando fetch GET...', 'info');
+  try {
+    const res = await fetch(`${url}?acao=ping`, { redirect: 'follow' });
+    const text = await res.text();
+    diagLog(`fetch GET status: ${res.status}`, res.ok ? 'ok' : 'erro');
+    diagLog(`Resposta (primeiros 200 chars): ${text.substring(0,200)}`, 'info');
+    if (text.includes('"ok":true')) {
+      diagLog('✅ fetch GET funcionou! Mas JSONP não — verifique doGet no Apps Script.', 'ok');
+    }
+  } catch(e) {
+    diagLog(`fetch GET erro: ${e.message}`, 'erro');
+    diagLog('Provável causa: CORS bloqueado (normal em file://). Use JSONP.', 'info');
+  }
+
+  diagLog('--- Checklist ---', 'info');
+  diagLog('1. Apps Script publicado? (Implantar → Gerenciar → verificar)', 'info');
+  diagLog('2. "Executar como: Eu" e "Acesso: Qualquer pessoa"?', 'info');
+  diagLog('3. Autorizações concedidas?', 'info');
+  diagLog('4. doGet retorna JSONP quando há parâmetro callback?', 'info');
+}
+
+async function syncManual() {
+  diagLog('Sincronização manual iniciada...', 'info');
+  await pingSheet();
+  if (sheetOnline) {
+    diagLog('Online! Carregando dados do Sheets...', 'ok');
+    await syncFromSheet();
+    await flushQueue();
+    diagLog('Sincronização concluída.', 'ok');
+  } else {
+    diagLog('Offline — não foi possível sincronizar.', 'erro');
+  }
+  atualizarPainelConfig();
+}
+
+// ===================== INIT =====================
+window.addEventListener('click', e => {
+  if (e.target === document.getElementById('rat-modal')) closeModal();
+});
+
+// Populate initial stop
+addStop();
+initRATForm();
+renderCheckinTable();
+renderDashboard();
+updateCheckinUI();
+getGPS();
+
+// Google Sheets: inicializar URL live e testar conexão
+window._SHEET_URL_LIVE = localStorage.getItem('fb_sheet_url') || '';
+atualizarPainelConfig();
+pingSheet();
+
+// Preencher selects dinâmicos com técnicos e clientes cadastrados
+populateSelects();
+
+// Auto-preenchimento de cliente na RAT e check-in
+const ratCliEl = document.getElementById('rat-cliente');
+if (ratCliEl) ratCliEl.addEventListener('change', () => autoPreencherCliente('rat-cliente'));
+const ciCliEl = document.getElementById('ci-cliente');
+if (ciCliEl) ciCliEl.addEventListener('change', () => autoPreencherCliente('ci-cliente'));
+
+// Sincronizar cadastros do Sheets se online
+async function syncCadastros() {
+  const rt = await sheetGetJSONP('listarTecnicos');
+  if (rt && rt.ok && rt.tecnicos && rt.tecnicos.length) {
+    tecnicos = rt.tecnicos;
+    localStorage.setItem('fb_tecnicos', JSON.stringify(tecnicos));
+    populateSelects();
+  }
+  const rc = await sheetGetJSONP('listarClientes');
+  if (rc && rc.ok && rc.clientes && rc.clientes.length) {
+    clientes = rc.clientes;
+    localStorage.setItem('fb_clientes', JSON.stringify(clientes));
+    populateClienteSelect();
+  }
+}
+if (window._SHEET_URL_LIVE) syncCadastros();
+// Tentar reenviar fila offline a cada 60s
+setInterval(() => {
+  if (pendingQueue.length) {
+    flushQueue().then(() => {
+      if (pendingQueue.length === 0) toast('Dados sincronizados com Sheets ☁', '✅');
+    });
+  }
+}, 60000);
+
+// Verificar alertas a cada 5 minutos
+verificarAlertas();
+setInterval(verificarAlertas, 300000);
+
+// Badge de chamados abertos
+atualizarBadgeChamados();
+
+// Inicializar selects do relatório
+initRelatorioSelects();
+</script>
+<script>
+// Registrar Service Worker para funcionamento offline
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(reg => console.log('SW registrado:', reg.scope))
+      .catch(err => console.log('SW erro:', err));
+  });
+}
+</script>
+</body>
+</html>
