@@ -1263,7 +1263,7 @@
     <div class="form-group">
       <label>URL do Web App</label>
       <input id="config-url-input" type="text"
-        placeholder="https://script.google.com/macros/s/XXXX/exec"
+        placeholder="https://script.google.com/macros/s/XXXX/exec" value="https://script.google.com/macros/s/AKfycbw1ROnZ7CXr2rqTKtBFwGdO9yakGI5J6Zkmy5yJQFSPX0ZT5BEt_C7QN8GdU57xCYsc5A/exec"
         style="font-family:'IBM Plex Mono',monospace;font-size:12px">
     </div>
 
@@ -1311,7 +1311,7 @@
 <script>
 // ===================== CONFIGURAÇÃO GOOGLE SHEETS =====================
 // Cole aqui a URL do seu Web App após publicar o Apps Script
-const SHEET_URL = localStorage.getItem('fb_sheet_url') || '';
+const SHEET_URL = localStorage.getItem('fb_sheet_url') || 'https://script.google.com/macros/s/AKfycbw1ROnZ7CXr2rqTKtBFwGdO9yakGI5J6Zkmy5yJQFSPX0ZT5BEt_C7QN8GdU57xCYsc5A/exec';
 
 // ===================== STATE =====================
 let rats = JSON.parse(localStorage.getItem('fb_rats') || '[]');
@@ -3361,7 +3361,7 @@ updateCheckinUI();
 getGPS();
 
 // Google Sheets: inicializar URL live e testar conexão
-window._SHEET_URL_LIVE = localStorage.getItem('fb_sheet_url') || '';
+window._SHEET_URL_LIVE = localStorage.getItem('fb_sheet_url') || 'https://script.google.com/macros/s/AKfycbw1ROnZ7CXr2rqTKtBFwGdO9yakGI5J6Zkmy5yJQFSPX0ZT5BEt_C7QN8GdU57xCYsc5A/exec';
 atualizarPainelConfig();
 pingSheet();
 
